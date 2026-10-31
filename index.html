@@ -328,7 +328,7 @@ footer a { color: inherit; }
     <section class="bloc" aria-labelledby="titre-profil">
       <p class="etiquette" data-i18n="onglet_profil">Mon profil</p>
       <h2 id="titre-profil" data-i18n="reperes_titre">Vos repères physiologiques</h2>
-      <p class="aide" data-i18n="reperes_aide">Ils serviront à ajuster les calculs de l'index de brutalité. Ces données ne quittent pas votre navigateur.</p>
+      <p class="aide" data-i18n="reperes_aide">Ils serviront à ajuster les calculs et prédictions de l'index de brutalité.</p>
       <form class="formulaire" id="f-profil">
         <div class="champ"><label for="pr-sexe" data-i18n="sexe">Sexe</label>
           <select id="pr-sexe"><option value="homme" data-i18n="homme">Homme</option><option value="femme" data-i18n="femme">Femme</option></select></div>
@@ -365,7 +365,7 @@ const I18N = {
     etape2: "Affichez votre fiche en grand écran (sur téléphone : « Version pour ordinateur » dans le menu du navigateur), sélectionnez toute la page (Ctrl+A, ou Cmd+A sur Mac) et copiez-la.", etape3: "Collez-la ci-dessous.",
     texte_fiche: "Texte de votre fiche", texte_fiche_ph: "Collez ici le contenu de votre fiche utmb.world", lire_fiche: "Lire ma fiche", effacer_fiche: "Effacer ma fiche",
     reperes_titre: "Vos repères physiologiques",
-    reperes_aide: "Ils serviront à ajuster les calculs de l'index de brutalité. Ces données ne quittent pas votre navigateur.",
+    reperes_aide: "Ils serviront à ajuster les calculs et prédictions de l'index de brutalité.",
     sexe: "Sexe", homme: "Homme", femme: "Femme", fc_repos: "FC de repos (bpm)", fc_max: "FC max (bpm)",
     g_duree: "Durée", g_distance: "Distance", g_technicite: "Technicité", g_meteo: "Météo", g_altitude: "Altitude",
     gd_duree: "Le temps passé en course, les heures de nuit comptant davantage.",
@@ -392,14 +392,14 @@ const I18N = {
     fiche_etroite: "Votre fiche a été copiée depuis une fenêtre trop étroite : utmb.world y masque les distances, les temps et les classements. Élargissez la fenêtre (ou, sur téléphone, choisissez « Version pour ordinateur » dans le menu du navigateur), puis recopiez la page.",
     erreur_affichage: "La fiche a été lue mais n'a pas pu s'afficher ({0}). Envoyez-nous ce message.",
     fiche_effacee: "Fiche effacée de ce navigateur.", th_annee: "Année", th_course: "Course", th_distance: "Distance", th_dplus: "D+", th_temps_c: "Temps", th_rang: "Rang",
-    abandon: "abandon", utmb_index: "UTMB index", resultats_lus: "{0} résultat(s) lu(s){1}. Données d'utmb.world, conservées dans ce navigateur uniquement.", plus_recents: ", les 40 plus récents affichés",
+    abandon: "abandon", utmb_index: "UTMB index", resultats_lus: "{0} résultat(s) lu(s){1}. Données issues d'utmb.world.", plus_recents: ", les 40 plus récents affichés",
     pied1: "{0}. Scores calculés tronçon par tronçon (100 m) pour le coureur médian : durée, distance, technicité, neige, boue, pluie, chaleur, vent, altitude (météo à l'heure de passage), puis taux d'abandon, degré d'autonomie. Données de travail, susceptibles d'évoluer.",
     pied2: 'Sources : fond de carte et terrain © les contributeurs d\'<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ; météo ERA5 et ERA5-Land du Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) ; tracés, temps et taux d\'abandon publiés par les organisateurs et les chronométreurs. Brutality Index est un projet indépendant, sans lien avec UTMB Group ni avec les organisateurs des courses citées.',
     version: "Étalonnage v1 — 2026 (provisoire)",
     cote_titre: "{0} course(s) reconnue(s) dans la base : brutalité à votre temps réel, avec la météo de vos heures de passage. Cliquez sur une course pour la voir.",
     cote_aucune: "Aucune de vos courses n'est encore dans la base. Pour l'instant : {0}.",
     cote_hors_base: "édition hors base", th_brutalite: "Brutalité",
-    index_general: "Général", sans_index: "aucun", voir_course: "Voir la course",
+    index_general: "Général", sans_index: "aucun", brut_index: "Index de brutalité", brut_record: "Record", voir_course: "Voir la course",
     th_activite: "Activité", depot: "GPX / FIT", depot_aide: "Glissez ici le fichier de cette course (GPX ou FIT, export Strava ou montre), ou cliquez pour le choisir.",
     act_lecture: "Lecture de {0}…", act_ok: "{0} : {1} en mouvement, {2} de pause{3}.", act_fc: ", intensité ×{0} (FC moyenne en mouvement {1} bpm)",
     act_sans_profil: " ; renseignez vos FC de repos et max (plus bas) puis redéposez le fichier pour ajuster l'intensité", act_pas_fc: " ; pas de FC dans le fichier",
@@ -437,7 +437,7 @@ const I18N = {
     etape2: "Show your profile in a wide window (on a phone: “Desktop site” in the browser menu), select the whole page (Ctrl+A, or Cmd+A on a Mac) and copy it.", etape3: "Paste it below.",
     texte_fiche: "Your profile text", texte_fiche_ph: "Paste the content of your utmb.world profile here", lire_fiche: "Read my profile", effacer_fiche: "Clear my profile",
     reperes_titre: "Your physiological markers",
-    reperes_aide: "They will be used to adjust the brutality index calculations. This data never leaves your browser.",
+    reperes_aide: "They will be used to adjust the brutality index calculations and predictions.",
     sexe: "Sex", homme: "Man", femme: "Woman", fc_repos: "Resting HR (bpm)", fc_max: "Max HR (bpm)",
     g_duree: "Duration", g_distance: "Distance", g_technicite: "Technicality", g_meteo: "Weather", g_altitude: "Altitude",
     gd_duree: "Time spent racing, night hours counting more.",
@@ -464,14 +464,14 @@ const I18N = {
     fiche_etroite: "Your profile was copied from a window that is too narrow: utmb.world hides distances, times and ranks there. Widen the window (or, on a phone, choose “Desktop site” in the browser menu), then copy the page again.",
     erreur_affichage: "Your profile was read but could not be displayed ({0}). Please send us this message.",
     fiche_effacee: "Profile cleared from this browser.", th_annee: "Year", th_course: "Race", th_distance: "Distance", th_dplus: "Elev. gain", th_temps_c: "Time", th_rang: "Rank",
-    abandon: "DNF", utmb_index: "UTMB index", resultats_lus: "{0} result(s) read{1}. Data from utmb.world, kept in this browser only.", plus_recents: ", the 40 most recent shown",
+    abandon: "DNF", utmb_index: "UTMB index", resultats_lus: "{0} result(s) read{1}. Data from utmb.world.", plus_recents: ", the 40 most recent shown",
     pied1: "{0}. Scores computed section by section (100 m) for the median runner: duration, distance, technicality, snow, mud, rain, heat, wind, altitude (weather at passing time), then drop-out rate and level of self-sufficiency. Working data, subject to change.",
     pied2: 'Sources: base map and terrain © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL); ERA5 and ERA5-Land weather from the Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); courses, times and drop-out rates published by race organisers and timing companies. Brutality Index is an independent project, not affiliated with UTMB Group or with the organisers of the races listed.',
     version: "Calibration v1 — 2026 (provisional)",
     cote_titre: "{0} race(s) found in the database: brutality at your actual time, with the weather at your passing times. Click a race to see it.",
     cote_aucune: "None of your races is in the database yet. So far: {0}.",
     cote_hors_base: "edition not in database", th_brutalite: "Brutality",
-    index_general: "Overall", sans_index: "none", voir_course: "See the race",
+    index_general: "Overall", sans_index: "none", brut_index: "Brutality index", brut_record: "Best", voir_course: "See the race",
     th_activite: "Activity", depot: "GPX / FIT", depot_aide: "Drop the file of this race here (GPX or FIT, Strava or watch export), or click to choose it.",
     act_lecture: "Reading {0}…", act_ok: "{0}: {1} moving, {2} stopped{3}.", act_fc: ", intensity ×{0} (mean moving HR {1} bpm)",
     act_sans_profil: "; enter your resting and max HR (below) then drop the file again to adjust intensity", act_pas_fc: "; no heart rate in the file",
@@ -1347,11 +1347,17 @@ function coteAuTemps(ed, T) {
 }
 // Le grade ≥ 1000 se révèle ici : c'est le coureur qui l'a réalisé
 const nomGradeRealise = index => { const i = rangGrade(index); return i === D.grades.length - 1 ? D.grade_realise[LANGUE] : nomGrade(index, LANGUE); };
+// Cote d'une course terminée de la base : au vrai rythme si une activité est déposée, sinon à son temps
+function coteCourse(r) {
+  const b = courseDeLaBase(r);
+  if (!b || !b.ed || r.abandon) return null;
+  return r.activite ? r.activite.index : coteAuTemps(b.ed, r.temps_h);
+}
 function celluleCote(r) {
   const b = courseDeLaBase(r);
   if (!b) return "";
   if (!b.ed) return `<span class="hors-base">${t("cote_hors_base")}</span>`;
-  const idx = r.abandon ? null : r.activite ? r.activite.index : coteAuTemps(b.ed, r.temps_h);
+  const idx = coteCourse(r);
   if (idx === null) return "—";
   const v = Math.round(idx), i = rangGrade(v), jeton = (b.course.id + "-" + b.ed.edition).toLowerCase();
   return `<button type="button" class="cote-lien"><span class="pastille" style="background:${couleurGrade(i)}"></span>${fmt(v)} · ${nomGradeRealise(v)}</button>${r.activite ? `<span class="gps">GPS</span>` : ""}`;
@@ -1374,11 +1380,16 @@ function afficherFicheSansGarde(f) {
   const tuile = (nom, v) => `<div><dt>${nom}</dt>${v === null || v === undefined ? `<dd class="vide">${t("sans_index")}</dd>` : `<dd>${v}</dd>`}</div>`;
   const dist = Object.entries(f.indexDistance).map(([k, v]) => tuile(k, v)).join("");
   const reconnues = f.resultats.filter(r => courseDeLaBase(r)?.ed).length;
+  // Index de brutalité du coureur : record = plus forte cote réalisée ; général = moyenne des cotes de ses courses
+  // terminées de la base (pas de catégories de distance : le grade ne dit pas la distance)
+  const cotes = f.resultats.map(coteCourse).filter(x => x != null);
   const base = D.courses.map(c => `${c.id} ${c.editions.filter(e => e.edition !== "à venir").map(e => e.edition).join(", ")}`).join(" ; ");
   const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-ligne="${f.resultats.indexOf(r)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td><td>${celluleDepot(r, f.resultats.indexOf(r))}</td></tr>`; }).join("");
   z.innerHTML = `<h3 style="margin:16px 0 0;font:600 1.15rem var(--body)">${esc(f.nom)}</h3><p class="meta">${esc(f.pays)} · ${esc(f.categorie)}</p>
     <p class="etiquette" style="margin-top:14px">${t("utmb_index")}</p>
     <dl class="fiche-index">${tuile(t("index_general"), f.index)}${dist}</dl>
+    <p class="etiquette" style="margin-top:14px">${t("brut_index")}</p>
+    <dl class="fiche-index">${tuile(t("brut_record"), cotes.length ? Math.round(Math.max(...cotes)) : null)}${tuile(t("index_general"), cotes.length ? Math.round(cotes.reduce((a, x) => a + x, 0) / cotes.length) : null)}</dl>
     <p class="aide">${reconnues ? t("cote_titre", reconnues) : t("cote_aucune", base)}</p>
     <div class="table-boite"><table class="editions"><thead><tr><th>${t("th_annee")}</th><th>${t("th_course")}</th><th class="n">${t("th_distance")}</th><th class="n">${t("th_dplus")}</th><th class="n">${t("th_temps_c")}</th><th class="n">${t("th_rang")}</th><th>${t("th_brutalite")}</th><th>${t("th_activite")}</th></tr></thead><tbody>${lignes}</tbody></table></div>
     <p class="aide">${t("resultats_lus", f.resultats.length, f.resultats.length > 40 ? t("plus_recents") : "")}</p>`;

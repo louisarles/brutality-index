@@ -126,6 +126,12 @@ h2 { font: 600 1.35rem/1.15 var(--body); margin: 0; text-wrap: balance; }
 .fiche-index dd.vide { font: 400 0.85rem var(--body); color: var(--muted); padding-top: 8px; }
 @media (max-width: 520px) { .fiche-index { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 tr.reconnue { cursor: pointer; }
+.depot { display: inline-flex; align-items: center; gap: 4px; font: 600 0.78rem var(--body); color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+.depot:hover, tr.survol .depot { border-color: var(--accent); color: var(--accent); }
+.depot.fait { border-style: solid; color: var(--ink); }
+.depot input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.depot:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gps { font: 600 0.7rem var(--body); color: var(--muted); margin-left: 4px; }
 tr.reconnue:hover td { background: var(--surface-2, rgba(127, 127, 127, 0.08)); }
 .cote-lien { font: inherit; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; white-space: nowrap; text-decoration: underline dotted; text-underline-offset: 3px; }
 .cote-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -379,6 +385,12 @@ const I18N = {
     cote_aucune: "Aucune de vos courses n'est encore dans la base. Pour l'instant : {0}.",
     cote_hors_base: "édition hors base", th_brutalite: "Brutalité",
     index_general: "Général", sans_index: "aucun", voir_course: "Voir la course",
+    th_activite: "Activité", depot: "GPX / FIT", depot_aide: "Glissez ici le fichier de cette course (GPX ou FIT, export Strava ou montre), ou cliquez pour le choisir.",
+    act_lecture: "Lecture de {0}…", act_ok: "{0} : {1} en mouvement, {2} de pause{3}.", act_fc: ", intensité ×{0} (FC moyenne en mouvement {1} bpm)",
+    act_sans_profil: " ; renseignez vos FC de repos et max (plus bas) puis redéposez le fichier pour ajuster l'intensité", act_pas_fc: " ; pas de FC dans le fichier",
+    act_erreur: "Fichier illisible ({0}). Formats acceptés : GPX et FIT.", act_autre: "Cette activité commence le {0}, trop loin du départ de l'édition {1} : ce n'est pas la bonne course.",
+    act_distance: " Attention : {0} km enregistrés pour {1} km de parcours, le calage sera approximatif.",
+    mc_gps: "Votre course à votre vrai rythme (fichier {0}) : {1} en mouvement, {2} de pause, avec la météo réelle de vos heures de passage{3}.",
     retour_fiche: "← Retour à ma fiche", votre_temps: "Votre temps", votre_course: "Votre course · édition {0}",
     mc_temps: "Votre course recalculée à votre temps ({1}), avec la météo réelle de vos heures de passage, à un rythme réparti comme celui du coureur type.",
     mc_abandon: "Abandon : pas de cote à votre nom. Voici l'édition {0} pour son coureur médian.",
@@ -439,6 +451,12 @@ const I18N = {
     cote_aucune: "None of your races is in the database yet. So far: {0}.",
     cote_hors_base: "edition not in database", th_brutalite: "Brutality",
     index_general: "Overall", sans_index: "none", voir_course: "See the race",
+    th_activite: "Activity", depot: "GPX / FIT", depot_aide: "Drop the file of this race here (GPX or FIT, Strava or watch export), or click to choose it.",
+    act_lecture: "Reading {0}…", act_ok: "{0}: {1} moving, {2} stopped{3}.", act_fc: ", intensity ×{0} (mean moving HR {1} bpm)",
+    act_sans_profil: "; enter your resting and max HR (below) then drop the file again to adjust intensity", act_pas_fc: "; no heart rate in the file",
+    act_erreur: "Unreadable file ({0}). Accepted formats: GPX and FIT.", act_autre: "This activity starts on {0}, too far from the start of the {1} edition: it is not the right race.",
+    act_distance: " Warning: {0} km recorded for a {1} km course, the alignment will be approximate.",
+    mc_gps: "Your race at your actual pace ({0}): {1} moving, {2} stopped, with the actual weather at your passing times{3}.",
     retour_fiche: "← Back to my profile", votre_temps: "Your time", votre_course: "Your race · {0} edition",
     mc_temps: "Your race recomputed at your time ({1}), with the actual weather at your passing times, with a pace spread like the typical runner's.",
     mc_abandon: "DNF: no score in your name. Here is the {0} edition for its median runner.",
@@ -805,24 +823,58 @@ function scoreEdition(course, ed, de, T) {
     v0 = inv.map(x => K * x); v = v0.map((x, j) => (x - perte[j]) / eta[j]); dt = v.map((x, j) => l[j] / x / 3600);
     cum = 0; for (let j = 0; j < n; j++) { tMil[j] = cum + dt[j] / 2; cum += dt[j]; }
   }
+  const bilan = bilanEdition(course, ed, de, { tMil, dt, v, v0, nuit, neige, humide, pluie, g: m.g, intensite: 1, T });
+  bilan.rythme = { dt, tMil };   // rythme modélisé (contrôle du moteur au vrai rythme)
+  return bilan;
+}
+// Coûts de chaque tronçon, index et agrégats au km (fin de score_parcours), pour un rythme donné
+function bilanEdition(course, ed, de, x) {
+  const m = course.moteur, { st, me } = de, n = m.dd.length, H = me.heures - 1;
+  const lin = (c, j, t) => { const h = Math.max(0, Math.min(H, t)), k = Math.floor(h), k1 = Math.min(k + 1, H), a = h - k, b = st.bloc[j]; return (1 - a) * me[c][k][b] + a * me[c][k1][b]; };
+  const { tMil, dt, v, v0, nuit, neige, humide, g, intensite, T } = x;
   const tm = { duree: 0, charge: 0, tech: 0, th: 0, vent: 0, alt: 0, nuit_h: 0 }; let brut = 0;
   const kms = ed.km.map(r => r.slice()), parKm = {}; ed.km.forEach((r, k) => { parKm[r[COL.km]] = k; });
   const agr = kms.map(() => ({ cout: 0, neige: 0, boue: 0, wbgt: 0, vent: 0, nuit: 0, heure: 0, n: 0 }));
-  cum = 0;
+  let cum = 0;
   for (let j = 0; j < n; j++) {
     const t = tMil[j], wbgt = lin("wbgt", j, t), face = lin("vent", j, t), densite = lin("densite", j, t);
     const sTh = surcoutThermique(wbgt), sV = surcoutVent(v[j], m.pente[j], face, densite), sAlt = m.s_alt[j];
-    const duree = RYTHME_NORMAL * dt[j] * (nuit[j] ? BONUS_NUIT : 1), charge = m.c[j] * m.dd[j] * m.g[j], tech = charge * (v0[j] / v[j] - 1);
+    const duree = RYTHME_NORMAL * dt[j] * (nuit[j] ? BONUS_NUIT : 1) * intensite, charge = m.c[j] * m.dd[j] * g[j], tech = charge * (v0[j] / v[j] - 1);
     const a = duree + charge + tech, cout = a * (1 + sTh) * (1 + sV) * (1 + sAlt);
     tm.duree += duree; tm.charge += charge; tm.tech += tech; tm.th += a * sTh; tm.vent += a * (1 + sTh) * sV;
     tm.alt += a * (1 + sTh) * (1 + sV) * sAlt; if (nuit[j]) tm.nuit_h += dt[j]; brut += cout;
     const k = parKm[Math.floor(cum + m.dd[j] / 2)]; cum += m.dd[j];
-    if (k !== undefined) { const g = agr[k]; g.cout += cout; g.neige = Math.max(g.neige, neige[j]); g.boue = g.boue || (st.boue_possible[j] === 1 && humide[j] && neige[j] < SEUIL_NEIGE_CM && st.glacier[j] !== 1); g.wbgt += wbgt; g.vent += face * 3.6; g.nuit += nuit[j] ? 1 : 0; g.heure += t; g.n++; }
+    if (k !== undefined) { const gk = agr[k]; gk.cout += cout; gk.neige = Math.max(gk.neige, neige[j]); gk.boue = gk.boue || (st.boue_possible[j] === 1 && humide[j] && neige[j] < SEUIL_NEIGE_CM && st.glacier[j] !== 1); gk.wbgt += wbgt; gk.vent += face * 3.6; gk.nuit += nuit[j] ? 1 : 0; gk.heure += t; gk.n++; }
   }
-  agr.forEach((g, k) => { if (!g.n) return; const r = kms[k]; r[COL.cout] = +g.cout.toFixed(2); r[COL.neige_cm] = Math.round(g.neige); r[COL.boue] = g.boue ? 1 : 0; r[COL.wbgt] = +(g.wbgt / g.n).toFixed(1); r[COL.vent_face] = +(g.vent / g.n).toFixed(1); r[COL.nuit] = 2 * g.nuit >= g.n ? 1 : 0; r[COL.heure] = +(g.heure / g.n).toFixed(1); });
+  agr.forEach((gk, k) => { if (!gk.n) return; const r = kms[k]; r[COL.cout] = +gk.cout.toFixed(2); r[COL.neige_cm] = Math.round(gk.neige); r[COL.boue] = gk.boue ? 1 : 0; r[COL.wbgt] = +(gk.wbgt / gk.n).toFixed(1); r[COL.vent_face] = +(gk.vent / gk.n).toFixed(1); r[COL.nuit] = 2 * gk.nuit >= gk.n ? 1 : 0; r[COL.heure] = +(gk.heure / gk.n).toFixed(1); });
   const avec = brut * ed.facteur_dnf * ed.facteur_autonomie, index = D.compression.A * Math.log1p(avec / D.compression.S0);
   return { brut, index, km: kms, nuit_pct: 100 * tm.nuit_h / T, termes: { "Durée": tm.duree, "Distance": tm.charge, "Technicité": tm.tech, "Météo": tm.th + tm.vent, "Altitude": tm.alt } };
 }
+// Au vrai rythme du coureur (activité calée par calerSurParcours) : temps en mouvement et pauses par tronçon ;
+// les pauses ne comptent pas en durée (p = 0) mais la fatigue récupère en exp(−t / 40 h) (§ 2.16) ; l'intensité
+// cardiaque multiplie le terme de durée (§ 2.17). Technicité : v0 / v = η + perte / v (rythme réel)
+const A_FATIGUE = 0.33, LAMBDA_KM = 60, TAU_RECUPERATION_H = 40;
+function scoreEditionReel(course, ed, de, cal, intensite = 1) {
+  const m = course.moteur, { st, me } = de, n = m.dd.length, t0 = Date.parse(me.depart), H = me.heures - 1;
+  const proche = (c, j, t) => me[c][Math.max(0, Math.min(H, Math.round(t)))][st.bloc[j]];
+  const nuit = new Array(n), neige = new Array(n), humide = new Array(n), pluie = new Array(n), v = new Array(n), v0 = new Array(n), g = new Array(n);
+  let x = 0;
+  for (let j = 0; j < n; j++) {
+    const t = cal.tMil[j];
+    nuit[j] = hauteurSoleil(t0 + t * 3600000, m.lat[j], m.lon[j]) < -0.833;
+    neige[j] = proche("neige", j, t); humide[j] = proche("humide", j, t) >= 0.5; pluie[j] = proche("pluie", j, t);
+    const enneige = neige[j] >= SEUIL_NEIGE_CM, glacier = st.glacier[j] === 1, tech = st.tech[j];
+    const tasse = glacier || (enneige && (st.osm_absent[j] === 1 || neige[j] > NEIGE_PROFONDE_CM || tech <= T_FACILE));
+    let te = st.boue_possible[j] === 1 && humide[j] && !enneige && !glacier ? Math.max(tech, T_BOUE) : tech;
+    if (te >= T_GLISSANT && pluie[j] >= PLUIE_MMH) te += 1;
+    const eta = glacier || enneige ? ETA_NEIGE : 1, perte = PERTE_TECH * (tasse ? 0 : te);
+    v[j] = m.dd[j] * 1000 / (cal.dt[j] * 3600); v0[j] = v[j] * eta + perte;
+    x += m.c[j] * m.dd[j]; g[j] = Math.exp(A_FATIGUE * (1 - Math.exp(-x / LAMBDA_KM))); x *= Math.exp(-cal.pause[j] / TAU_RECUPERATION_H);
+  }
+  const T = cal.dt.reduce((a, b) => a + b, 0) + cal.pause.reduce((a, b) => a + b, 0);
+  return bilanEdition(course, ed, de, { tMil: cal.tMil, dt: cal.dt, v, v0, nuit, neige, humide, pluie, g, intensite, T });
+}
+
 function nomGrade(index, langue) { const i = rangGrade(index); return langue === "en" ? D.grades[i].en : D.grades[i].fr; }
 
 /* ---------- Prédicteur ---------- */
@@ -1002,6 +1054,144 @@ function lireFicheUtmb(texte) {
   return fiche;
 }
 
+/* Lecture d'une activité GPS du coureur (FIT ou GPX), pauses, calage sur le parcours et intensité cardiaque.
+   Tout se fait dans le navigateur : le fichier ne quitte pas l'appareil. Inséré dans la page par construireAppli.py. */
+
+/* ---------- FIT (protocole Garmin) : messages record (20), seuls champs utiles ---------- */
+const EPOQUE_FIT_MS = Date.UTC(1989, 11, 31);
+const TYPES_FIT = { 0x00: [1, "u"], 0x01: [1, "s"], 0x02: [1, "u"], 0x83: [2, "s"], 0x84: [2, "u"], 0x85: [4, "s"], 0x86: [4, "u"],
+  0x07: [1, "x"], 0x88: [4, "f"], 0x89: [8, "f"], 0x0A: [1, "u"], 0x8B: [2, "u"], 0x8C: [4, "u"], 0x0D: [1, "x"], 0x8E: [8, "x"], 0x8F: [8, "x"], 0x90: [8, "x"] };
+const INVALIDE_FIT = { "u1": 0xFF, "s1": 0x7F, "u2": 0xFFFF, "s2": 0x7FFF, "u4": 0xFFFFFFFF, "s4": 0x7FFFFFFF };
+function lireFit(buffer) {
+  const v = new DataView(buffer), octets = new Uint8Array(buffer);
+  if (String.fromCharCode(...octets.slice(8, 12)) !== ".FIT") throw new Error("fit");
+  const tete = octets[0], fin = tete + v.getUint32(4, true), defs = {}, points = [];
+  let pos = tete, dernierTs = null;
+  const lireChamp = (d, taille, base, p) => {
+    const [t, k] = TYPES_FIT[base] || [1, "x"], le = !d.grand;
+    if (k === "x" || t !== taille) return null;
+    let x;
+    if (k === "f") x = t === 4 ? v.getFloat32(p, le) : v.getFloat64(p, le);
+    else if (t === 1) x = k === "s" ? v.getInt8(p) : v.getUint8(p);
+    else if (t === 2) x = k === "s" ? v.getInt16(p, le) : v.getUint16(p, le);
+    else x = k === "s" ? v.getInt32(p, le) : v.getUint32(p, le);
+    return x === INVALIDE_FIT[k + t] ? null : x;
+  };
+  const lireMessage = d => {
+    const m = {};
+    for (const [num, taille, base] of d.champs) { m[num] = lireChamp(d, taille, base, pos); pos += taille; }
+    pos += d.dev; return m;
+  };
+  const garder = (d, m) => {
+    if (d.global !== 20 || m[253] == null || m[0] == null || m[1] == null) return;
+    const alt = m[78] != null ? m[78] / 5 - 500 : m[2] != null ? m[2] / 5 - 500 : null;
+    points.push({ t: EPOQUE_FIT_MS + m[253] * 1000, lat: m[0] * 180 / 2 ** 31, lon: m[1] * 180 / 2 ** 31, alt, fc: m[3] ?? null });
+  };
+  while (pos < fin) {
+    const h = octets[pos++];
+    if (h & 0x80) {                          // en-tête compressé : horodatage relatif au dernier
+      const d = defs[(h >> 5) & 3], m = lireMessage(d);
+      if (dernierTs !== null) { let ts = (dernierTs & ~0x1F) + (h & 0x1F); if (ts < dernierTs) ts += 0x20; m[253] = dernierTs = ts; }
+      garder(d, m); continue;
+    }
+    if (h & 0x40) {                          // définition d'un type de message local
+      const grand = octets[pos + 1] === 1, global = v.getUint16(pos + 2, !grand), n = octets[pos + 4]; pos += 5;
+      const champs = []; for (let k = 0; k < n; k++) { champs.push([octets[pos], octets[pos + 1], octets[pos + 2]]); pos += 3; }
+      let dev = 0; if (h & 0x20) { const nd = octets[pos++]; for (let k = 0; k < nd; k++) { dev += octets[pos + 1]; pos += 3; } }
+      defs[h & 0x0F] = { global, grand, champs, dev };
+    } else {
+      const d = defs[h & 0x0F], m = lireMessage(d);
+      if (m[253] != null) dernierTs = m[253];
+      garder(d, m);
+    }
+  }
+  return points;
+}
+
+/* ---------- GPX : points de trace, FC dans les extensions (gpxtpx:hr, ns3:hr…) ---------- */
+function lireGpx(texte) {
+  const doc = new DOMParser().parseFromString(texte, "application/xml");
+  if (doc.querySelector("parsererror")) throw new Error("gpx");
+  return [...doc.getElementsByTagNameNS("*", "trkpt")].map(p => {
+    const enfant = nom => [...p.getElementsByTagNameNS("*", nom)][0]?.textContent;
+    const t = Date.parse(enfant("time") || ""), fc = enfant("hr");
+    return { t, lat: +p.getAttribute("lat"), lon: +p.getAttribute("lon"), alt: enfant("ele") != null ? +enfant("ele") : null, fc: fc != null ? +fc : null };
+  }).filter(p => Number.isFinite(p.t) && Number.isFinite(p.lat) && Number.isFinite(p.lon));
+}
+
+async function lireActivite(fichier) {
+  const nom = fichier.name.toLowerCase();
+  if (nom.endsWith(".fit")) return lireFit(await fichier.arrayBuffer());
+  if (nom.endsWith(".gpx")) return lireGpx(await fichier.text());
+  throw new Error("format");
+}
+
+/* ---------- Pauses : seuil calé sur le temps de déplacement de Strava (activités Marche / Rando) ---------- */
+// Vitesse de chaque intervalle = distance GPS parcourue sur une fenêtre de 10 s centrée sur lui ; sous 0,24 m/s
+// (0,86 km/h), l'intervalle est une pause. Calé le 01/11/2026 sur 2 activités de Louis (FIT bruts) : écart au temps
+// de déplacement de Strava de −1,2 min sur 8 h 03 et de −1,0 min sur 2 h 33. Strava ne publie que le seuil de la
+// course à pied (allure plus lente que 30 min/mile ≈ 0,89 m/s), qui comptait 3 h 14 de trop en pause.
+const FENETRE_PAUSE_S = 10, SEUIL_PAUSE_MS = 0.24;
+function distanceM(a, b) {
+  const p1 = a.lat * Math.PI / 180, p2 = b.lat * Math.PI / 180, dl = (b.lon - a.lon) * Math.PI / 180;
+  return 2 * 6371000 * Math.asin(Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2));
+}
+function intervalles(points) {
+  const n = points.length, t = points.map(p => p.t / 1000), x = new Array(n).fill(0);
+  for (let k = 1; k < n; k++) x[k] = x[k - 1] + distanceM(points[k - 1], points[k]);
+  const xA = s => { let lo = 0, hi = n - 1; if (s <= t[0]) return x[0]; if (s >= t[hi]) return x[hi];
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (t[m] <= s) lo = m; else hi = m; }
+    return x[lo] + (x[hi] - x[lo]) * (s - t[lo]) / (t[hi] - t[lo]); };
+  const res = [];
+  for (let k = 0; k + 1 < n; k++) {
+    const dt = t[k + 1] - t[k]; if (!(dt > 0)) continue;
+    const tm = (t[k] + t[k + 1]) / 2, v = (xA(tm + FENETRE_PAUSE_S / 2) - xA(tm - FENETRE_PAUSE_S / 2)) / FENETRE_PAUSE_S;
+    res.push({ t0: t[k], t1: t[k + 1], dt, d: x[k + 1] - x[k], mouv: v >= SEUIL_PAUSE_MS, fc: points[k + 1].fc ?? points[k].fc });
+  }
+  return res;
+}
+
+/* ---------- Calage sur le parcours : chaque tronçon reçoit son temps en mouvement, sa pause, son heure ---------- */
+// Position sur le parcours = part de la distance parcourue EN MOUVEMENT (la dérive du GPS à l'arrêt ne compte pas),
+// rapportée à la longueur de notre tracé. Les arrêts tombés à une frontière vont au tronçon suivant.
+function calerSurParcours(course, departIso, inter) {
+  const m = course.moteur, n = m.dd.length, total = m.dd.reduce((a, b) => a + b, 0), t0 = Date.parse(departIso) / 1000;
+  const cumD = [0], cumM = [0], temps = [inter[0].t0];
+  for (const i of inter) { cumD.push(cumD[cumD.length - 1] + (i.mouv ? i.d : 0)); cumM.push(cumM[cumM.length - 1] + (i.mouv ? i.dt : 0)); temps.push(i.t1); }
+  const dTot = cumD[cumD.length - 1];
+  const quand = cible => {   // premier instant où la distance en mouvement atteint la cible, et temps en mouvement à cet instant
+    let lo = 0, hi = cumD.length - 1; if (cible <= 0) return [temps[0], 0]; if (cible >= dTot) return [temps[hi], cumM[hi]];
+    while (hi - lo > 1) { const k = (lo + hi) >> 1; if (cumD[k] < cible) lo = k; else hi = k; }
+    const a = (cible - cumD[lo]) / Math.max(cumD[hi] - cumD[lo], 1e-9);
+    return [temps[lo] + a * (temps[hi] - temps[lo]), cumM[lo] + a * (cumM[hi] - cumM[lo])];
+  };
+  const dt = new Array(n), pause = new Array(n), tMil = new Array(n);
+  let cum = 0, [tA, mA] = quand(0);
+  for (let j = 0; j < n; j++) {
+    cum += m.dd[j];
+    const [tB, mB] = quand(cum / total * dTot), mouv = mB - mA;
+    dt[j] = Math.max(mouv, 1) / 3600; pause[j] = Math.max(0, tB - tA - mouv) / 3600;
+    tMil[j] = (tA + (tB - tA) / 2 - t0) / 3600; tA = tB; mA = mB;
+  }
+  return { dt, pause, tMil, distance_km: dTot / 1000, mouvement_h: cumM[cumM.length - 1] / 3600,
+           ecoule_h: (temps[temps.length - 1] - temps[0]) / 3600, debut_h: (temps[0] - t0) / 3600 };
+}
+
+/* ---------- Intensité : TRIMP de Banister sur le temps en mouvement (coucheCoureur.facteur_intensite) ---------- */
+const COEF_TRIMP = { homme: [0.64, 1.92], femme: [0.86, 1.67] };
+function facteurIntensite(inter, fcRepos, fcMax, sexe) {
+  const [k, b] = COEF_TRIMP[sexe === "femme" ? "femme" : "homme"], poids = f => { f = Math.max(0, Math.min(1, f)); return f * k * Math.exp(b * f); };
+  let s = 0, duree = 0, avecFc = 0, mouv = 0, sommeFc = 0;
+  for (const i of inter) {
+    if (!i.mouv) continue; mouv += i.dt;
+    if (i.fc == null || i.fc < 30) continue;
+    avecFc += i.dt; s += poids((i.fc - fcRepos) / (fcMax - fcRepos)) * i.dt; duree += i.dt; sommeFc += i.fc * i.dt;
+  }
+  if (!duree || avecFc < 0.5 * mouv) return null;   // moins de la moitié du temps en mouvement avec une FC
+  const h = duree / 3600, ref = (92.6 - 5.9 * Math.log(h)) / 100 * fcMax;
+  return { facteur: s / (poids((ref - fcRepos) / (fcMax - fcRepos)) * duree), fc_moy: sommeFc / duree, fc_ref: ref };
+}
+
 const esc = x => String(x ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));   // textes venus d'utmb.world
 function etatImport(t) { document.getElementById("imp-etat").textContent = t; }
 function erreurImport(t) { const z = document.getElementById("imp-erreur"); z.textContent = t; z.hidden = !t; }
@@ -1031,10 +1221,15 @@ function celluleCote(r) {
   const b = courseDeLaBase(r);
   if (!b) return "";
   if (!b.ed) return `<span class="hors-base">${t("cote_hors_base")}</span>`;
-  const idx = r.abandon ? null : coteAuTemps(b.ed, r.temps_h);
+  const idx = r.abandon ? null : r.activite ? r.activite.index : coteAuTemps(b.ed, r.temps_h);
   if (idx === null) return "—";
   const v = Math.round(idx), i = rangGrade(v), jeton = (b.course.id + "-" + b.ed.edition).toLowerCase();
-  return `<button type="button" class="cote-lien"><span class="pastille" style="background:${couleurGrade(i)}"></span>${fmt(v)} · ${nomGradeRealise(v)}</button>`;
+  return `<button type="button" class="cote-lien"><span class="pastille" style="background:${couleurGrade(i)}"></span>${fmt(v)} · ${nomGradeRealise(v)}</button>${r.activite ? `<span class="gps">GPS</span>` : ""}`;
+}
+function celluleDepot(r, k) {
+  const b = courseDeLaBase(r); if (!b || !b.ed || r.abandon) return "";
+  const nom = r.activite ? "✓ " + esc(r.activite.fichier) : t("depot");
+  return `<label class="depot${r.activite ? " fait" : ""}" title="${t("depot_aide")}" data-depot="${k}">${nom}<input type="file" accept=".fit,.gpx" data-depot="${k}"></label>`;
 }
 function afficherFiche(f) {
   try { afficherFicheSansGarde(f); }
@@ -1050,15 +1245,48 @@ function afficherFicheSansGarde(f) {
   const dist = Object.entries(f.indexDistance).map(([k, v]) => tuile(k, v)).join("");
   const reconnues = f.resultats.filter(r => courseDeLaBase(r)?.ed).length;
   const base = D.courses.map(c => `${c.id} ${c.editions.filter(e => e.edition !== "à venir").map(e => e.edition).join(", ")}`).join(" ; ");
-  const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-ligne="${f.resultats.indexOf(r)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td></tr>`; }).join("");
+  const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-ligne="${f.resultats.indexOf(r)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td><td>${celluleDepot(r, f.resultats.indexOf(r))}</td></tr>`; }).join("");
   z.innerHTML = `<h3 style="margin:16px 0 0;font:600 1.15rem var(--body)">${esc(f.nom)}</h3><p class="meta">${esc(f.pays)} · ${esc(f.categorie)}</p>
     <p class="etiquette" style="margin-top:14px">${t("utmb_index")}</p>
     <dl class="fiche-index">${tuile(t("index_general"), f.index)}${dist}</dl>
     <p class="aide">${reconnues ? t("cote_titre", reconnues) : t("cote_aucune", base)}</p>
-    <div class="table-boite"><table class="editions"><thead><tr><th>${t("th_annee")}</th><th>${t("th_course")}</th><th class="n">${t("th_distance")}</th><th class="n">${t("th_dplus")}</th><th class="n">${t("th_temps_c")}</th><th class="n">${t("th_rang")}</th><th>${t("th_brutalite")}</th></tr></thead><tbody>${lignes}</tbody></table></div>
+    <div class="table-boite"><table class="editions"><thead><tr><th>${t("th_annee")}</th><th>${t("th_course")}</th><th class="n">${t("th_distance")}</th><th class="n">${t("th_dplus")}</th><th class="n">${t("th_temps_c")}</th><th class="n">${t("th_rang")}</th><th>${t("th_brutalite")}</th><th>${t("th_activite")}</th></tr></thead><tbody>${lignes}</tbody></table></div>
     <p class="aide">${t("resultats_lus", f.resultats.length, f.resultats.length > 40 ? t("plus_recents") : "")}</p>`;
 }
+async function importerActivite(k, fichier) {
+  const f = profilLu().ficheUtmb || ficheCourante, r = f && f.resultats[k], b = r && courseDeLaBase(r);
+  if (!b || !b.ed) return;
+  erreurImport(""); etatImport(t("act_lecture", fichier.name));
+  try {
+    const points = await lireActivite(fichier);
+    if (points.length < 10) throw new Error("vide");
+    const de = await donneesEdition(b.course, b.ed), depart = Date.parse(de.me.depart);
+    if (Math.abs(points[0].t - depart) > 12 * 3600000) { etatImport(""); erreurImport(t("act_autre", new Date(points[0].t).toLocaleDateString(LANGUE === "en" ? "en-GB" : "fr-FR"), b.ed.edition)); return; }
+    const inter = intervalles(points), cal = calerSurParcours(b.course, de.me.depart, inter);
+    const pr = profilLu(), fi = pr.fcRepos && pr.fcMax ? facteurIntensite(inter, +pr.fcRepos, +pr.fcMax, pr.sexe) : null;
+    const res = scoreEditionReel(b.course, b.ed, de, cal, fi ? fi.facteur : 1);
+    const pauseH = cal.pause.reduce((a, x) => a + x, 0), avecFc = inter.some(i => i.fc != null);
+    r.activite = { fichier: fichier.name, index: res.index, intensite: fi ? +fi.facteur.toFixed(3) : null, fc_moy: fi ? Math.round(fi.fc_moy) : null,
+                   mouvement_h: cal.mouvement_h, pause_h: pauseH, distance_km: +cal.distance_km.toFixed(1),
+                   dt: cal.dt.map(x => Math.round(x * 3600)), pause: cal.pause.map(x => Math.round(x * 3600)), tMil: cal.tMil.map(x => +x.toFixed(4)) };
+    const p = profilLu(); p.ficheUtmb = f; try { localStorage.setItem("brutality-profil", JSON.stringify(p)); } catch (e) {}
+    const fcTxt = fi ? t("act_fc", fmt(fi.facteur, 2), Math.round(fi.fc_moy)) : avecFc ? t("act_sans_profil") : t("act_pas_fc");
+    const ratio = cal.distance_km / b.course.distance_km;
+    etatImport(t("act_ok", fichier.name, hhmm(cal.mouvement_h), hhmm(pauseH), fcTxt) + (ratio < 0.85 || ratio > 1.2 ? t("act_distance", fmt(cal.distance_km, 1), fmt(b.course.distance_km)) : ""));
+    afficherFiche(f);
+  } catch (e) { etatImport(""); erreurImport(t("act_erreur", String(e && e.message || e))); }
+}
+const fichierDe = ev => ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+const zoneFiche = document.getElementById("imp-fiche");
+zoneFiche.addEventListener("change", ev => { const i = ev.target.closest("input[data-depot]"); if (i && i.files[0]) importerActivite(+i.dataset.depot, i.files[0]); });
+zoneFiche.addEventListener("dragover", ev => { const tr = ev.target.closest("tr"); if (tr && tr.querySelector("[data-depot]")) { ev.preventDefault(); zoneFiche.querySelectorAll("tr.survol").forEach(x => x.classList.remove("survol")); tr.classList.add("survol"); } });
+zoneFiche.addEventListener("dragleave", ev => { const tr = ev.target.closest("tr"); if (tr && !tr.contains(ev.relatedTarget)) tr.classList.remove("survol"); });
+zoneFiche.addEventListener("drop", ev => {
+  const tr = ev.target.closest("tr"), d = tr && tr.querySelector("[data-depot]"), fichier = fichierDe(ev);
+  if (!d || !fichier) return; ev.preventDefault(); tr.classList.remove("survol"); importerActivite(+d.dataset.depot, fichier);
+});
 document.getElementById("imp-fiche").addEventListener("click", ev => {
+  if (ev.target.closest(".depot")) return;   // le dépôt d'un fichier n'ouvre pas la course
   const b = ev.target.closest("[data-ligne]"); if (!b) return;
   const f = profilLu().ficheUtmb || ficheCourante; const r = f && f.resultats[+b.dataset.ligne];
   if (r) ouvrirMaCourse(r);
@@ -1086,7 +1314,9 @@ function dessinerVueCoureur() {
   document.getElementById("eti-edition").textContent = t("votre_course", ed.edition);
   document.getElementById("c-temps-titre").textContent = t("votre_temps");
   document.getElementById("secret").hidden = true;
-  aide.textContent = t("mc_temps", course.id, hhmm(r.temps_h));
+  const a = r.activite;
+  aide.textContent = a ? t("mc_gps", a.fichier, hhmm(a.mouvement_h), hhmm(a.pause_h), a.intensite ? t("act_fc", fmt(a.intensite, 2), a.fc_moy) : "")
+                       : t("mc_temps", course.id, hhmm(r.temps_h));
 }
 async function ouvrirMaCourse(r) {
   const b = courseDeLaBase(r); if (!b || !b.ed) return;
@@ -1101,7 +1331,11 @@ async function ouvrirMaCourse(r) {
   try {
     const de = await donneesEdition(b.course, b.ed);
     if (!vueCoureur || vueCoureur.r !== r) return;
-    vueCoureur.res = scoreEdition(b.course, b.ed, de, r.temps_h); dessinerVueCoureur();
+    if (r.activite) {
+      const a = r.activite, cal = { dt: a.dt.map(x => x / 3600), pause: a.pause.map(x => x / 3600), tMil: a.tMil };
+      vueCoureur.res = scoreEditionReel(b.course, b.ed, de, cal, a.intensite || 1);
+    } else vueCoureur.res = scoreEdition(b.course, b.ed, de, r.temps_h);
+    dessinerVueCoureur();
   } catch (e) { aide.textContent = t("mc_erreur", String(e && e.message || e)); }
 }
 document.getElementById("mc-retour").addEventListener("click", () => {

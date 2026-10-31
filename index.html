@@ -390,6 +390,8 @@ const I18N = {
     act_sans_profil: " ; renseignez vos FC de repos et max (plus bas) puis redéposez le fichier pour ajuster l'intensité", act_pas_fc: " ; pas de FC dans le fichier",
     act_erreur: "Fichier illisible ({0}). Formats acceptés : GPX et FIT.", act_autre: "Cette activité commence le {0}, trop loin du départ de l'édition {1} : ce n'est pas la bonne course.",
     act_distance: " Attention : {0} km enregistrés pour {1} km de parcours, le calage sera approximatif.",
+    act_fc_suspecte: ". ⚠️ FC suspecte ({0}) : l'intensité n'est pas comptée", mc_fc_suspecte: ", FC suspecte : intensité non comptée",
+    fc_hors_bornes: "{0} % du temps hors de vos bornes de FC", fc_figee: "valeur figée pendant {0} min", fc_sauts: "{0} sauts brusques par heure", fc_cadence: "collée à la cadence {0} % du temps",
     mc_gps: "Votre course à votre vrai rythme (fichier {0}) : {1} en mouvement, {2} de pause, avec la météo réelle de vos heures de passage{3}.",
     retour_fiche: "← Retour à ma fiche", votre_temps: "Votre temps", votre_course: "Votre course · édition {0}",
     mc_temps: "Votre course recalculée à votre temps ({1}), avec la météo réelle de vos heures de passage, à un rythme réparti comme celui du coureur type.",
@@ -456,6 +458,8 @@ const I18N = {
     act_sans_profil: "; enter your resting and max HR (below) then drop the file again to adjust intensity", act_pas_fc: "; no heart rate in the file",
     act_erreur: "Unreadable file ({0}). Accepted formats: GPX and FIT.", act_autre: "This activity starts on {0}, too far from the start of the {1} edition: it is not the right race.",
     act_distance: " Warning: {0} km recorded for a {1} km course, the alignment will be approximate.",
+    act_fc_suspecte: ". ⚠️ Suspicious heart rate ({0}): intensity is not counted", mc_fc_suspecte: ", suspicious heart rate: intensity not counted",
+    fc_hors_bornes: "{0}% of the time outside your HR bounds", fc_figee: "value frozen for {0} min", fc_sauts: "{0} sudden jumps per hour", fc_cadence: "locked to cadence {0}% of the time",
     mc_gps: "Your race at your actual pace ({0}): {1} moving, {2} stopped, with the actual weather at your passing times{3}.",
     retour_fiche: "← Back to my profile", votre_temps: "Your time", votre_course: "Your race · {0} edition",
     mc_temps: "Your race recomputed at your time ({1}), with the actual weather at your passing times, with a pace spread like the typical runner's.",
@@ -1085,7 +1089,7 @@ function lireFit(buffer) {
   const garder = (d, m) => {
     if (d.global !== 20 || m[253] == null || m[0] == null || m[1] == null) return;
     const alt = m[78] != null ? m[78] / 5 - 500 : m[2] != null ? m[2] / 5 - 500 : null;
-    points.push({ t: EPOQUE_FIT_MS + m[253] * 1000, lat: m[0] * 180 / 2 ** 31, lon: m[1] * 180 / 2 ** 31, alt, fc: m[3] ?? null });
+    points.push({ t: EPOQUE_FIT_MS + m[253] * 1000, lat: m[0] * 180 / 2 ** 31, lon: m[1] * 180 / 2 ** 31, alt, fc: m[3] ?? null, cad: m[4] ?? null });
   };
   while (pos < fin) {
     const h = octets[pos++];
@@ -1114,8 +1118,8 @@ function lireGpx(texte) {
   if (doc.querySelector("parsererror")) throw new Error("gpx");
   return [...doc.getElementsByTagNameNS("*", "trkpt")].map(p => {
     const enfant = nom => [...p.getElementsByTagNameNS("*", nom)][0]?.textContent;
-    const t = Date.parse(enfant("time") || ""), fc = enfant("hr");
-    return { t, lat: +p.getAttribute("lat"), lon: +p.getAttribute("lon"), alt: enfant("ele") != null ? +enfant("ele") : null, fc: fc != null ? +fc : null };
+    const t = Date.parse(enfant("time") || ""), fc = enfant("hr"), cad = enfant("cad");
+    return { t, lat: +p.getAttribute("lat"), lon: +p.getAttribute("lon"), alt: enfant("ele") != null ? +enfant("ele") : null, fc: fc != null ? +fc : null, cad: cad != null ? +cad : null };
   }).filter(p => Number.isFinite(p.t) && Number.isFinite(p.lat) && Number.isFinite(p.lon));
 }
 
@@ -1146,7 +1150,7 @@ function intervalles(points) {
   for (let k = 0; k + 1 < n; k++) {
     const dt = t[k + 1] - t[k]; if (!(dt > 0)) continue;
     const tm = (t[k] + t[k + 1]) / 2, v = (xA(tm + FENETRE_PAUSE_S / 2) - xA(tm - FENETRE_PAUSE_S / 2)) / FENETRE_PAUSE_S;
-    res.push({ t0: t[k], t1: t[k + 1], dt, d: x[k + 1] - x[k], mouv: v >= SEUIL_PAUSE_MS, fc: points[k + 1].fc ?? points[k].fc });
+    res.push({ t0: t[k], t1: t[k + 1], dt, d: x[k + 1] - x[k], mouv: v >= SEUIL_PAUSE_MS, fc: points[k + 1].fc ?? points[k].fc, cad: points[k + 1].cad ?? points[k].cad });
   }
   return res;
 }
@@ -1175,6 +1179,34 @@ function calerSurParcours(course, departIso, inter) {
   }
   return { dt, pause, tMil, distance_km: dTot / 1000, mouvement_h: cumM[cumM.length - 1] / 3600,
            ecoule_h: (temps[temps.length - 1] - temps[0]) / 3600, debut_h: (temps[0] - t0) / 3600 };
+}
+
+/* ---------- FC suspecte : si l'un des contrôles échoue, l'intensité n'est pas comptée ---------- */
+// Seuils choisis pour l'appli (⚠️ pas tirés de la littérature) ; défauts connus des cardiofréquencemètres, surtout
+// optiques au poignet : décrochage, valeurs aberrantes, signal figé, verrouillage sur la cadence de foulée.
+const FC_CONTROLES = {
+  hors_bornes: 0.05,   // part du temps en mouvement au-dessus de FC max + 5 ou sous la FC de repos
+  fige_s: 300,         // même valeur pendant 5 min de suite en mouvement
+  sauts_h: 6,          // sauts de 30 bpm ou plus en 5 s au plus, par heure en mouvement
+  cadence: 0.3,        // part du temps où la FC colle (±3 bpm) à la cadence en pas par minute
+};
+function controleFc(inter, fcRepos, fcMax) {
+  const raisons = []; let mouv = 0, hors = 0, sauts = 0, cadOk = 0, cadColle = 0, fige = 0, figeMax = 0, prec = null;
+  for (const i of inter) {
+    if (!i.mouv || i.fc == null || i.fc < 30) { prec = null; fige = 0; continue; }
+    mouv += i.dt;
+    if (i.fc > fcMax + 5 || i.fc < fcRepos) hors += i.dt;
+    if (prec !== null && i.t0 - prec.t1 < 1 && i.dt <= 5 && Math.abs(i.fc - prec.fc) >= 30) sauts++;
+    fige = prec !== null && i.fc === prec.fc ? fige + i.dt : 0; figeMax = Math.max(figeMax, fige);
+    if (i.cad > 0) { const spm = i.cad < 120 ? 2 * i.cad : i.cad; cadOk += i.dt; if (Math.abs(i.fc - spm) <= 3) cadColle += i.dt; }
+    prec = i;
+  }
+  if (!mouv) return raisons;
+  if (hors / mouv > FC_CONTROLES.hors_bornes) raisons.push(["fc_hors_bornes", Math.round(100 * hors / mouv)]);
+  if (figeMax >= FC_CONTROLES.fige_s) raisons.push(["fc_figee", Math.round(figeMax / 60)]);
+  if (sauts / (mouv / 3600) > FC_CONTROLES.sauts_h) raisons.push(["fc_sauts", Math.round(sauts / (mouv / 3600))]);
+  if (cadOk > 0.5 * mouv && cadColle / cadOk > FC_CONTROLES.cadence) raisons.push(["fc_cadence", Math.round(100 * cadColle / cadOk)]);
+  return raisons;
 }
 
 /* ---------- Intensité : TRIMP de Banister sur le temps en mouvement (coucheCoureur.facteur_intensite) ---------- */
@@ -1263,14 +1295,16 @@ async function importerActivite(k, fichier) {
     const de = await donneesEdition(b.course, b.ed), depart = Date.parse(de.me.depart);
     if (Math.abs(points[0].t - depart) > 12 * 3600000) { etatImport(""); erreurImport(t("act_autre", new Date(points[0].t).toLocaleDateString(LANGUE === "en" ? "en-GB" : "fr-FR"), b.ed.edition)); return; }
     const inter = intervalles(points), cal = calerSurParcours(b.course, de.me.depart, inter);
-    const pr = profilLu(), fi = pr.fcRepos && pr.fcMax ? facteurIntensite(inter, +pr.fcRepos, +pr.fcMax, pr.sexe) : null;
+    const pr = profilLu(), fiBrut = pr.fcRepos && pr.fcMax ? facteurIntensite(inter, +pr.fcRepos, +pr.fcMax, pr.sexe) : null;
+    const suspicions = fiBrut ? controleFc(inter, +pr.fcRepos, +pr.fcMax) : [], fi = suspicions.length ? null : fiBrut;
     const res = scoreEditionReel(b.course, b.ed, de, cal, fi ? fi.facteur : 1);
     const pauseH = cal.pause.reduce((a, x) => a + x, 0), avecFc = inter.some(i => i.fc != null);
-    r.activite = { fichier: fichier.name, index: res.index, intensite: fi ? +fi.facteur.toFixed(3) : null, fc_moy: fi ? Math.round(fi.fc_moy) : null,
+    r.activite = { fichier: fichier.name, index: res.index, intensite: fi ? +fi.facteur.toFixed(3) : null, fc_moy: fi ? Math.round(fi.fc_moy) : null, fc_suspecte: suspicions,
                    mouvement_h: cal.mouvement_h, pause_h: pauseH, distance_km: +cal.distance_km.toFixed(1),
                    dt: cal.dt.map(x => Math.round(x * 3600)), pause: cal.pause.map(x => Math.round(x * 3600)), tMil: cal.tMil.map(x => +x.toFixed(4)) };
     const p = profilLu(); p.ficheUtmb = f; try { localStorage.setItem("brutality-profil", JSON.stringify(p)); } catch (e) {}
-    const fcTxt = fi ? t("act_fc", fmt(fi.facteur, 2), Math.round(fi.fc_moy)) : avecFc ? t("act_sans_profil") : t("act_pas_fc");
+    const fcTxt = suspicions.length ? t("act_fc_suspecte", suspicions.map(([c, x]) => t(c, x)).join(", "))
+      : fi ? t("act_fc", fmt(fi.facteur, 2), Math.round(fi.fc_moy)) : avecFc ? t("act_sans_profil") : t("act_pas_fc");
     const ratio = cal.distance_km / b.course.distance_km;
     etatImport(t("act_ok", fichier.name, hhmm(cal.mouvement_h), hhmm(pauseH), fcTxt) + (ratio < 0.85 || ratio > 1.2 ? t("act_distance", fmt(cal.distance_km, 1), fmt(b.course.distance_km)) : ""));
     afficherFiche(f);
@@ -1315,7 +1349,7 @@ function dessinerVueCoureur() {
   document.getElementById("c-temps-titre").textContent = t("votre_temps");
   document.getElementById("secret").hidden = true;
   const a = r.activite;
-  aide.textContent = a ? t("mc_gps", a.fichier, hhmm(a.mouvement_h), hhmm(a.pause_h), a.intensite ? t("act_fc", fmt(a.intensite, 2), a.fc_moy) : "")
+  aide.textContent = a ? t("mc_gps", a.fichier, hhmm(a.mouvement_h), hhmm(a.pause_h), a.intensite ? t("act_fc", fmt(a.intensite, 2), a.fc_moy) : a.fc_suspecte && a.fc_suspecte.length ? t("mc_fc_suspecte") : "")
                        : t("mc_temps", course.id, hhmm(r.temps_h));
 }
 async function ouvrirMaCourse(r) {

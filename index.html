@@ -116,6 +116,10 @@ h2 { font: 600 1.35rem/1.15 var(--body); margin: 0; text-wrap: balance; }
 .candidats { display: grid; gap: 6px; margin-top: 12px; }
 .candidats button { display: flex; justify-content: space-between; gap: 12px; text-align: left; font: 0.95rem var(--body); padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .candidats button:hover { border-color: var(--accent); }
+.tl-commandes { display: flex; align-items: center; gap: 12px; margin: 10px 0 6px; }
+.tl-commandes input[type=range] { flex: 1; accent-color: var(--accent); }
+.tl-lecture { font: 0.9rem var(--mono); margin: 4px 0 8px; min-height: 2.6em; }
+#mc-timeline { margin-top: 20px; }
 .ma-course-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 14px; }
 .ma-course-tete .aide { margin: 0; }
 .fiche-index { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px; }
@@ -309,6 +313,17 @@ footer a { color: inherit; }
         <p class="aide" id="mc-aide" aria-live="polite"></p>
       </div>
       <div id="mc-place"></div>
+      <section class="bloc" aria-labelledby="titre-timeline" id="mc-timeline" hidden>
+        <p class="etiquette" data-i18n="tl_etiquette">Votre activité</p>
+        <h2 id="titre-timeline" data-i18n="tl_titre">Votre course, minute par minute</h2>
+        <div class="tl-commandes">
+          <button class="bouton" id="tl-lecture" type="button" aria-pressed="false" data-i18n="tl_lire">▶ Lecture</button>
+          <input id="tl-curseur" type="range" min="0" max="1000" step="1" value="0" aria-labelledby="titre-timeline">
+        </div>
+        <p class="tl-lecture" id="tl-etat" aria-live="off"></p>
+        <div class="carte" id="tl-frise"></div>
+        <div class="legende" id="tl-legende"></div>
+      </section>
     </div>
     <section class="bloc" aria-labelledby="titre-profil">
       <p class="etiquette" data-i18n="onglet_profil">Mon profil</p>
@@ -393,6 +408,10 @@ const I18N = {
     act_fc_suspecte: ". ⚠️ FC suspecte ({0}) : l'intensité n'est pas comptée", mc_fc_suspecte: ", FC suspecte : intensité non comptée",
     fc_hors_bornes: "{0} % du temps hors de vos bornes de FC", fc_figee: "valeur figée pendant {0} min", fc_sauts: "{0} sauts brusques par heure", fc_cadence: "collée à la cadence {0} % du temps",
     mc_gps: "Votre course à votre vrai rythme (fichier {0}) : {1} en mouvement, {2} de pause, avec la météo réelle de vos heures de passage{3}.",
+    tl_etiquette: "Votre activité", tl_titre: "Votre course, minute par minute", tl_lire: "▶ Lecture", tl_pause: "❚❚ Pause",
+    tl_etat: "{0} de course · km {1} · {2} km/h{3} · WBGT {4} °C · vent de face {5} km/h{6} · {7} % de la brutalité", tl_fc: " · FC {0}", tl_nuit: " · nuit", tl_arret: " · à l'arrêt",
+    tl_mouvement: "en mouvement", tl_pauses: "arrêts", tl_nuit_l: "nuit", tl_brut: "brutalité cumulée", tl_fc_l: "FC",
+    act_proportion: " Trace trop éloignée du parcours ({0} % des points à plus de 300 m) : calage à la proportion de distance.",
     retour_fiche: "← Retour à ma fiche", votre_temps: "Votre temps", votre_course: "Votre course · édition {0}",
     mc_temps: "Votre course recalculée à votre temps ({1}), avec la météo réelle de vos heures de passage, à un rythme réparti comme celui du coureur type.",
     mc_abandon: "Abandon : pas de cote à votre nom. Voici l'édition {0} pour son coureur médian.",
@@ -461,6 +480,10 @@ const I18N = {
     act_fc_suspecte: ". ⚠️ Suspicious heart rate ({0}): intensity is not counted", mc_fc_suspecte: ", suspicious heart rate: intensity not counted",
     fc_hors_bornes: "{0}% of the time outside your HR bounds", fc_figee: "value frozen for {0} min", fc_sauts: "{0} sudden jumps per hour", fc_cadence: "locked to cadence {0}% of the time",
     mc_gps: "Your race at your actual pace ({0}): {1} moving, {2} stopped, with the actual weather at your passing times{3}.",
+    tl_etiquette: "Your activity", tl_titre: "Your race, minute by minute", tl_lire: "▶ Play", tl_pause: "❚❚ Pause",
+    tl_etat: "{0} into the race · km {1} · {2} km/h{3} · WBGT {4} °C · headwind {5} km/h{6} · {7}% of the brutality", tl_fc: " · HR {0}", tl_nuit: " · night", tl_arret: " · stopped",
+    tl_mouvement: "moving", tl_pauses: "stops", tl_nuit_l: "night", tl_brut: "cumulative brutality", tl_fc_l: "HR",
+    act_proportion: " Track too far from the course ({0}% of points more than 300 m away): aligned by share of distance.",
     retour_fiche: "← Back to my profile", votre_temps: "Your time", votre_course: "Your race · {0} edition",
     mc_temps: "Your race recomputed at your time ({1}), with the actual weather at your passing times, with a pace spread like the typical runner's.",
     mc_abandon: "DNF: no score in your name. Here is the {0} edition for its median runner.",
@@ -543,6 +566,7 @@ function bulle(k, evt, boite, noms) {
 }
 function cacherBulle() { document.getElementById("bulle").hidden = true; }
 
+let curseurParcours = () => {};
 function carte(course, ed) {
   const zone = document.getElementById("carte"); zone.textContent = "";
   const km = ed.km, s = seuilsCout(course), fond = (D.fonds || {})[course.id] || { lignes: [], glaciers: [], ravitos: [] };
@@ -647,6 +671,14 @@ function carte(course, ed) {
   zoneSurvol.addEventListener("mouseleave", () => { cacherBulle(); suivre(null); repere.setAttribute("visibility", "hidden"); });
   const fin = km[km.length - 1][COL.km];
   [0, 0.25, 0.5, 0.75, 1].forEach(f => { const t = el("text", { x: g + (Wp - g - d) * f, y: Hp - 4, "text-anchor": f === 1 ? "end" : "middle", "font-size": 10, fill: css("--muted"), "font-family": css("--mono") }, sp); t.textContent = fmt(fin * f) + (f === 1 ? " km" : ""); });
+
+  // Position donnée en km (timeline) : point sur la carte et repère sur le profil ; null les cache
+  curseurParcours = kmf => {
+    if (kmf === null) { suivre(null); repere.setAttribute("visibility", "hidden"); return; }
+    const f = Math.max(0, Math.min(km.length - 1, kmf)), i = Math.min(km.length - 2, Math.floor(f)), a = f - i;
+    curseur.setAttribute("cx", px(i) + a * (px(i + 1) - px(i))); curseur.setAttribute("cy", py(i) + a * (py(i + 1) - py(i))); curseur.setAttribute("visibility", "visible");
+    const x = xk(i) + a * (xk(i + 1) - xk(i)); repere.setAttribute("x1", x); repere.setAttribute("x2", x); repere.setAttribute("visibility", "visible");
+  };
 
   const lg = document.getElementById("legende");
   lg.innerHTML = `<span>${t("legende")}</span><span class="echelle-legende">${t("faible")} ${classes.map(c => `<i style="background:var(${c})"></i>`).join("")} ${t("forte")}</span>` +
@@ -838,7 +870,7 @@ function bilanEdition(course, ed, de, x) {
   const { tMil, dt, v, v0, nuit, neige, humide, g, intensite, T } = x;
   const tm = { duree: 0, charge: 0, tech: 0, th: 0, vent: 0, alt: 0, nuit_h: 0 }; let brut = 0;
   const kms = ed.km.map(r => r.slice()), parKm = {}; ed.km.forEach((r, k) => { parKm[r[COL.km]] = k; });
-  const agr = kms.map(() => ({ cout: 0, neige: 0, boue: 0, wbgt: 0, vent: 0, nuit: 0, heure: 0, n: 0 }));
+  const agr = kms.map(() => ({ cout: 0, neige: 0, boue: 0, wbgt: 0, vent: 0, nuit: 0, heure: 0, n: 0 })), couts = new Array(n);
   let cum = 0;
   for (let j = 0; j < n; j++) {
     const t = tMil[j], wbgt = lin("wbgt", j, t), face = lin("vent", j, t), densite = lin("densite", j, t);
@@ -846,13 +878,13 @@ function bilanEdition(course, ed, de, x) {
     const duree = RYTHME_NORMAL * dt[j] * (nuit[j] ? BONUS_NUIT : 1) * intensite, charge = m.c[j] * m.dd[j] * g[j], tech = charge * (v0[j] / v[j] - 1);
     const a = duree + charge + tech, cout = a * (1 + sTh) * (1 + sV) * (1 + sAlt);
     tm.duree += duree; tm.charge += charge; tm.tech += tech; tm.th += a * sTh; tm.vent += a * (1 + sTh) * sV;
-    tm.alt += a * (1 + sTh) * (1 + sV) * sAlt; if (nuit[j]) tm.nuit_h += dt[j]; brut += cout;
+    tm.alt += a * (1 + sTh) * (1 + sV) * sAlt; if (nuit[j]) tm.nuit_h += dt[j]; brut += cout; couts[j] = cout;
     const k = parKm[Math.floor(cum + m.dd[j] / 2)]; cum += m.dd[j];
     if (k !== undefined) { const gk = agr[k]; gk.cout += cout; gk.neige = Math.max(gk.neige, neige[j]); gk.boue = gk.boue || (st.boue_possible[j] === 1 && humide[j] && neige[j] < SEUIL_NEIGE_CM && st.glacier[j] !== 1); gk.wbgt += wbgt; gk.vent += face * 3.6; gk.nuit += nuit[j] ? 1 : 0; gk.heure += t; gk.n++; }
   }
   agr.forEach((gk, k) => { if (!gk.n) return; const r = kms[k]; r[COL.cout] = +gk.cout.toFixed(2); r[COL.neige_cm] = Math.round(gk.neige); r[COL.boue] = gk.boue ? 1 : 0; r[COL.wbgt] = +(gk.wbgt / gk.n).toFixed(1); r[COL.vent_face] = +(gk.vent / gk.n).toFixed(1); r[COL.nuit] = 2 * gk.nuit >= gk.n ? 1 : 0; r[COL.heure] = +(gk.heure / gk.n).toFixed(1); });
   const avec = brut * ed.facteur_dnf * ed.facteur_autonomie, index = D.compression.A * Math.log1p(avec / D.compression.S0);
-  return { brut, index, km: kms, nuit_pct: 100 * tm.nuit_h / T, termes: { "Durée": tm.duree, "Distance": tm.charge, "Technicité": tm.tech, "Météo": tm.th + tm.vent, "Altitude": tm.alt } };
+  return { brut, index, km: kms, couts, nuit_pct: 100 * tm.nuit_h / T, termes: { "Durée": tm.duree, "Distance": tm.charge, "Technicité": tm.tech, "Météo": tm.th + tm.vent, "Altitude": tm.alt } };
 }
 // Au vrai rythme du coureur (activité calée par calerSurParcours) : temps en mouvement et pauses par tronçon ;
 // les pauses ne comptent pas en durée (p = 0) mais la fatigue récupère en exp(−t / 40 h) (§ 2.16) ; l'intensité
@@ -1150,7 +1182,7 @@ function intervalles(points) {
   for (let k = 0; k + 1 < n; k++) {
     const dt = t[k + 1] - t[k]; if (!(dt > 0)) continue;
     const tm = (t[k] + t[k + 1]) / 2, v = (xA(tm + FENETRE_PAUSE_S / 2) - xA(tm - FENETRE_PAUSE_S / 2)) / FENETRE_PAUSE_S;
-    res.push({ t0: t[k], t1: t[k + 1], dt, d: x[k + 1] - x[k], mouv: v >= SEUIL_PAUSE_MS, fc: points[k + 1].fc ?? points[k].fc, cad: points[k + 1].cad ?? points[k].cad });
+    res.push({ k, t0: t[k], t1: t[k + 1], dt, d: x[k + 1] - x[k], mouv: v >= SEUIL_PAUSE_MS, fc: points[k + 1].fc ?? points[k].fc, cad: points[k + 1].cad ?? points[k].cad });
   }
   return res;
 }
@@ -1179,6 +1211,72 @@ function calerSurParcours(course, departIso, inter) {
   }
   return { dt, pause, tMil, distance_km: dTot / 1000, mouvement_h: cumM[cumM.length - 1] / 3600,
            ecoule_h: (temps[temps.length - 1] - temps[0]) / 3600, debut_h: (temps[0] - t0) / 3600 };
+}
+
+/* ---------- Calage point par point : projection de chaque point GPS sur le tracé ---------- */
+// Le tracé est la ligne des milieux de tronçons (100 m). Chaque point est projeté sur le segment le plus proche
+// parmi ceux que le coureur peut avoir atteints depuis le point précédent (au plus 8 m/s, recherche vers l'avant
+// seulement : un tracé qui repasse au même endroit, comme Chamonix au départ et à l'arrivée, ne fait pas sauter).
+// Un point à plus de 300 m du tracé (détour, GPS perdu) laisse le coureur où il était. Position non décroissante.
+const ECART_MAX_M = 300, VITESSE_MAX_MS = 8;
+function projeterSurParcours(course, points) {
+  const m = course.moteur, n = m.lat.length, sMil = new Array(n);
+  let c = 0; for (let j = 0; j < n; j++) { sMil[j] = c + m.dd[j] / 2; c += m.dd[j]; }
+  const kx = 111320 * Math.cos(m.lat[0] * Math.PI / 180), ky = 110540;
+  const X = m.lon.map(l => l * kx), Y = m.lat.map(l => l * ky);
+  const s = new Array(points.length); let k = 0, sPrec = sMil[0], hors = 0;
+  for (let i = 0; i < points.length; i++) {
+    const px = points[i].lon * kx, py = points[i].lat * ky, dtp = i ? (points[i].t - points[i - 1].t) / 1000 : 0;
+    let meilleur = null;
+    const chercher = (a, b) => {
+      for (let q = Math.max(0, a); q < Math.min(n - 1, b); q++) {
+        const ux = X[q + 1] - X[q], uy = Y[q + 1] - Y[q], l2 = ux * ux + uy * uy || 1;
+        const f = Math.max(0, Math.min(1, ((px - X[q]) * ux + (py - Y[q]) * uy) / l2)), dx = X[q] + f * ux - px, dy = Y[q] + f * uy - py, d2 = dx * dx + dy * dy;
+        if (!meilleur || d2 < meilleur.d2) meilleur = { d2, q, f };
+      }
+    };
+    const avance = 3 + Math.ceil(dtp * VITESSE_MAX_MS / 100);
+    chercher(k - 2, k + avance + 1);
+    if (meilleur.d2 > ECART_MAX_M ** 2) { const local = meilleur; meilleur = null; chercher(k - 2, k + avance + 50); if (meilleur.d2 > local.d2) meilleur = local; }
+    if (meilleur.d2 <= ECART_MAX_M ** 2) {
+      const sp = sMil[meilleur.q] + meilleur.f * (sMil[meilleur.q + 1] - sMil[meilleur.q]);
+      if (sp >= sPrec - 0.05) { k = meilleur.q; sPrec = Math.max(sPrec, sp); }
+    } else hors++;
+    s[i] = sPrec;
+  }
+  return { s, sMin: sMil[0], sMax: sMil[n - 1], hors: hors / points.length };
+}
+// Temps en mouvement, pause et heure de passage de chaque tronçon ; départ = premier passage 20 m après le premier
+// milieu de tronçon, arrivée = 20 m avant le dernier (l'attente sur la ligne et l'après-arrivée ne comptent pas)
+function calerParProjection(course, departIso, points, inter) {
+  const m = course.moteur, n = m.dd.length, t0 = Date.parse(departIso) / 1000, pr = projeterSurParcours(course, points);
+  const t = points.map(p => p.t / 1000), M = new Array(points.length).fill(0), mouvDe = new Array(points.length).fill(false);
+  const parK = {}; inter.forEach(i => { parK[i.k] = i; });
+  for (let k = 0; k + 1 < points.length; k++) { const i = parK[k]; M[k + 1] = M[k] + (i && i.mouv ? i.dt : 0); mouvDe[k] = !!(i && i.mouv); }
+  const quand = cible => {   // premier instant où la position atteint la cible (interpolée), et temps en mouvement à cet instant
+    let lo = 0, hi = points.length - 1; if (pr.s[hi] < cible) return [t[hi], M[hi]]; if (pr.s[0] >= cible) return [t[0], M[0]];
+    while (hi - lo > 1) { const q = (lo + hi) >> 1; if (pr.s[q] < cible) lo = q; else hi = q; }
+    const a = (cible - pr.s[lo]) / Math.max(pr.s[hi] - pr.s[lo], 1e-9);
+    return [t[lo] + a * (t[hi] - t[lo]), M[lo] + a * (M[hi] - M[lo])];
+  };
+  const borne = x => Math.max(pr.sMin + 0.02, Math.min(pr.sMax - 0.02, x));
+  const dt = new Array(n), pause = new Array(n), tMil = new Array(n);
+  let cum = 0, [tA, mA] = quand(borne(0)); const tDebut = tA;
+  for (let j = 0; j < n; j++) {
+    cum += m.dd[j];
+    const [tB, mB] = quand(borne(cum)), mouv = mB - mA;
+    dt[j] = Math.max(mouv, 1) / 3600; pause[j] = Math.max(0, tB - tA - mouv) / 3600;
+    tMil[j] = (tA + (tB - tA) / 2 - t0) / 3600; tA = tB; mA = mB;
+  }
+  // Série pour la timeline : un échantillon toutes les ~10 s (au plus 6 000), du départ à l'arrivée
+  const fin = tA, pas = Math.max(10, Math.ceil((fin - tDebut) / 6000)), serie = { t: [], s: [], fc: [], mv: [] };
+  for (let k = 0, ts = tDebut; ts <= fin; ts += pas) {
+    while (k + 1 < points.length && t[k + 1] <= ts) k++;
+    serie.t.push(Math.round(ts - t0)); serie.s.push(+pr.s[k].toFixed(3)); serie.fc.push(points[k].fc ?? null); serie.mv.push(mouvDe[k] ? 1 : 0);
+  }
+  const dTot = inter.reduce((a, i) => a + (i.mouv ? i.d : 0), 0);
+  return { dt, pause, tMil, distance_km: dTot / 1000, mouvement_h: dt.reduce((a, x) => a + x, 0), ecoule_h: (fin - tDebut) / 3600,
+           debut_h: (tDebut - t0) / 3600, hors_trace: pr.hors, serie, calage: "projection" };
 }
 
 /* ---------- FC suspecte : si l'un des contrôles échoue, l'intensité n'est pas comptée ---------- */
@@ -1294,19 +1392,24 @@ async function importerActivite(k, fichier) {
     if (points.length < 10) throw new Error("vide");
     const de = await donneesEdition(b.course, b.ed), depart = Date.parse(de.me.depart);
     if (Math.abs(points[0].t - depart) > 12 * 3600000) { etatImport(""); erreurImport(t("act_autre", new Date(points[0].t).toLocaleDateString(LANGUE === "en" ? "en-GB" : "fr-FR"), b.ed.edition)); return; }
-    const inter = intervalles(points), cal = calerSurParcours(b.course, de.me.depart, inter);
+    const inter = intervalles(points);
+    let cal = calerParProjection(b.course, de.me.depart, points, inter);
+    const repli = cal.hors_trace > 0.2 ? cal.hors_trace : null;
+    if (repli !== null) cal = calerSurParcours(b.course, de.me.depart, inter);
     const pr = profilLu(), fiBrut = pr.fcRepos && pr.fcMax ? facteurIntensite(inter, +pr.fcRepos, +pr.fcMax, pr.sexe) : null;
     const suspicions = fiBrut ? controleFc(inter, +pr.fcRepos, +pr.fcMax) : [], fi = suspicions.length ? null : fiBrut;
     const res = scoreEditionReel(b.course, b.ed, de, cal, fi ? fi.facteur : 1);
     const pauseH = cal.pause.reduce((a, x) => a + x, 0), avecFc = inter.some(i => i.fc != null);
     r.activite = { fichier: fichier.name, index: res.index, intensite: fi ? +fi.facteur.toFixed(3) : null, fc_moy: fi ? Math.round(fi.fc_moy) : null, fc_suspecte: suspicions,
                    mouvement_h: cal.mouvement_h, pause_h: pauseH, distance_km: +cal.distance_km.toFixed(1),
-                   dt: cal.dt.map(x => Math.round(x * 3600)), pause: cal.pause.map(x => Math.round(x * 3600)), tMil: cal.tMil.map(x => +x.toFixed(4)) };
+                   dt: cal.dt.map(x => Math.round(x * 3600)), pause: cal.pause.map(x => Math.round(x * 3600)), tMil: cal.tMil.map(x => +x.toFixed(4)),
+                   calage: cal.calage || "proportion", serie: cal.serie || null };
     const p = profilLu(); p.ficheUtmb = f; try { localStorage.setItem("brutality-profil", JSON.stringify(p)); } catch (e) {}
     const fcTxt = suspicions.length ? t("act_fc_suspecte", suspicions.map(([c, x]) => t(c, x)).join(", "))
       : fi ? t("act_fc", fmt(fi.facteur, 2), Math.round(fi.fc_moy)) : avecFc ? t("act_sans_profil") : t("act_pas_fc");
     const ratio = cal.distance_km / b.course.distance_km;
-    etatImport(t("act_ok", fichier.name, hhmm(cal.mouvement_h), hhmm(pauseH), fcTxt) + (ratio < 0.85 || ratio > 1.2 ? t("act_distance", fmt(cal.distance_km, 1), fmt(b.course.distance_km)) : ""));
+    etatImport(t("act_ok", fichier.name, hhmm(cal.mouvement_h), hhmm(pauseH), fcTxt) + (ratio < 0.85 || ratio > 1.2 ? t("act_distance", fmt(cal.distance_km, 1), fmt(b.course.distance_km)) : "")
+               + (repli !== null ? t("act_proportion", Math.round(100 * repli)) : ""));
     afficherFiche(f);
   } catch (e) { etatImport(""); erreurImport(t("act_erreur", String(e && e.message || e))); }
 }
@@ -1325,11 +1428,83 @@ document.getElementById("imp-fiche").addEventListener("click", ev => {
   const f = profilLu().ficheUtmb || ficheCourante; const r = f && f.resultats[+b.dataset.ligne];
   if (r) ouvrirMaCourse(r);
 });
+
+/* ---------- Timeline : la course du coureur, minute par minute (activité GPX/FIT) ---------- */
+let lecture = null;
+function arreterLecture() {
+  if (lecture) clearInterval(lecture); lecture = null;
+  const b = document.getElementById("tl-lecture"); b.textContent = t("tl_lire"); b.setAttribute("aria-pressed", "false");
+}
+function timeline(course, r, res, de) {
+  const zone = document.getElementById("mc-timeline"), a = r.activite, se = a && a.serie;
+  arreterLecture();
+  if (!se || !se.t.length || !de) { zone.hidden = true; return; }
+  zone.hidden = false;
+  const m = course.moteur, n = m.dd.length, N = se.t.length, depart = Date.parse(de.me.depart), H = de.me.heures - 1;
+  const finT = [], c = []; let x = 0; for (let j = 0; j < n; j++) { x += m.dd[j]; finT.push(x); }
+  let cc = 0; for (let j = 0; j < n; j++) { cc += res.couts[j]; c.push(cc); }
+  const troncon = sk => { let lo = 0, hi = n - 1; while (lo < hi) { const q = (lo + hi) >> 1; if (finT[q] < sk) lo = q + 1; else hi = q; } return lo; };
+  const brutA = sk => { const j = troncon(sk), deb = j ? finT[j - 1] : 0, f = Math.max(0, Math.min(1, (sk - deb) / m.dd[j])); return ((j ? c[j - 1] : 0) + f * res.couts[j]) / cc; };
+  const lin = (champ, j, th) => { const h = Math.max(0, Math.min(H, th)), k = Math.floor(h), k1 = Math.min(k + 1, H), u = h - k, bl = de.st.bloc[j]; return (1 - u) * de.me[champ][k][bl] + u * de.me[champ][k1][bl]; };
+  const nuitA = (k, j) => hauteurSoleil(depart + se.t[k] * 1000, m.lat[j], m.lon[j]) < -0.833;
+  const vitesse = k => { const a0 = Math.max(0, k - 6), a1 = Math.min(N - 1, k + 6); return se.t[a1] > se.t[a0] ? (se.s[a1] - se.s[a0]) / ((se.t[a1] - se.t[a0]) / 3600) : 0; };
+  // Frise
+  const fz = document.getElementById("tl-frise"); fz.textContent = "";
+  const W = 640, Hf = 150, g = 40, d = 10, yb0 = 8, yb1 = 20, h0 = 30, hb = 132, t0 = se.t[0], t1 = se.t[N - 1];
+  const xt = k => g + (W - g - d) * (se.t[k] - t0) / Math.max(t1 - t0, 1);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${Hf}`, role: "img", "aria-label": t("tl_titre") }, fz);
+  const nuitK = se.t.map((_, k) => nuitA(k, troncon(se.s[k])));
+  for (let k = 0; k < N; ) { let k2 = k; while (k2 + 1 < N && nuitK[k2 + 1] === nuitK[k]) k2++;
+    if (nuitK[k]) el("rect", { x: xt(k), y: h0, width: Math.max(xt(k2) - xt(k), 0.5), height: hb - h0, fill: css("--line"), opacity: 0.5 }, svg);
+    el("rect", { x: xt(k), y: yb0, width: Math.max(xt(k2) - xt(k), 0.5), height: yb1 - yb0, fill: css(se.mv[k] ? "--accent" : "--line") }, svg);   // mouvement / arrêts
+    k = k2 + 1; }
+  const yp = f => hb - (hb - h0) * f;
+  el("path", { d: "M" + se.t.map((_, k) => `${xt(k).toFixed(1)},${yp(brutA(se.s[k])).toFixed(1)}`).join(" L"), fill: "none", stroke: css("--accent"), "stroke-width": 2 }, svg);
+  const fcs = se.fc.filter(v => v != null && v >= 30);
+  if (fcs.length > N / 2) {
+    const fmin = Math.min(...fcs), fmax = Math.max(...fcs), yf = v => hb - (hb - h0) * (v - fmin) / Math.max(fmax - fmin, 1);
+    el("path", { d: "M" + se.t.map((_, k) => se.fc[k] != null && se.fc[k] >= 30 ? `${xt(k).toFixed(1)},${yf(se.fc[k]).toFixed(1)}` : null).filter(Boolean).join(" L"), fill: "none", stroke: css("--muted"), "stroke-width": 0.8, opacity: 0.8 }, svg);
+  }
+  [0, 0.25, 0.5, 0.75, 1].forEach(f => { const tx = el("text", { x: g + (W - g - d) * f, y: Hf - 4, "text-anchor": f === 1 ? "end" : f === 0 ? "start" : "middle", "font-size": 10, fill: css("--muted"), "font-family": css("--mono") }, svg); tx.textContent = hhmm((t1 - t0) * f / 3600); });
+  [0, 0.5, 1].forEach(f => { const ty = el("text", { x: g - 6, y: yp(f) + 4, "text-anchor": "end", "font-size": 10, fill: css("--muted"), "font-family": css("--mono") }, svg); ty.textContent = Math.round(100 * f) + " %"; });
+  const ligne = el("line", { x1: g, x2: g, y1: yb0 - 4, y2: hb + 4, stroke: css("--ink"), "stroke-width": 1.5 }, svg);
+  document.getElementById("tl-legende").innerHTML =
+    `<span><i style="display:inline-block;width:14px;height:8px;background:var(--accent)"></i> ${t("tl_mouvement")}</span><span><i style="display:inline-block;width:14px;height:8px;background:var(--line)"></i> ${t("tl_pauses")} / ${t("tl_nuit_l")}</span>` +
+    `<span><i style="display:inline-block;width:14px;height:2px;background:var(--accent);vertical-align:middle"></i> ${t("tl_brut")}</span>` + (fcs.length > N / 2 ? `<span><i style="display:inline-block;width:14px;height:1px;background:var(--muted);vertical-align:middle"></i> ${t("tl_fc_l")}</span>` : "");
+  // Curseur et lecture
+  const cur = document.getElementById("tl-curseur"), etat = document.getElementById("tl-etat");
+  cur.max = N - 1; cur.value = 0;
+  const montrer = k => {
+    k = Math.max(0, Math.min(N - 1, Math.round(k))); cur.value = k;
+    const sk = se.s[k], j = troncon(sk), th = se.t[k] / 3600, x0 = xt(k);
+    ligne.setAttribute("x1", x0); ligne.setAttribute("x2", x0);
+    const kmIdx = res.km.findIndex(rw => rw[COL.km] === Math.floor(sk)), kmf = kmIdx < 0 ? null : kmIdx + (sk - Math.floor(sk));
+    curseurParcours(kmf);
+    etat.textContent = t("tl_etat", hhmm((se.t[k] - t0) / 3600), fmt(sk, 1), fmt(vitesse(k), 1), se.fc[k] ? t("tl_fc", se.fc[k]) : "",
+      fmt(lin("wbgt", j, th), 0), fmt(lin("vent", j, th) * 3.6, 0), (nuitK[k] ? t("tl_nuit") : "") + (se.mv[k] ? "" : t("tl_arret")), fmt(100 * brutA(sk), 0));
+  };
+  cur.oninput = () => { arreterLecture(); montrer(+cur.value); };
+  const surFrise = e => { const rc = svg.getBoundingClientRect(), xx = (e.clientX - rc.left) * W / rc.width, f = (xx - g) / (W - g - d), tc = t0 + f * (t1 - t0);
+    let k = 0; while (k + 1 < N && se.t[k + 1] <= tc) k++; arreterLecture(); montrer(k); };
+  svg.onclick = surFrise;
+  const bouton = document.getElementById("tl-lecture");
+  bouton.onclick = () => {
+    if (lecture) { arreterLecture(); return; }
+    bouton.textContent = t("tl_pause"); bouton.setAttribute("aria-pressed", "true");
+    let k = +cur.value >= N - 1 ? 0 : +cur.value, dernier = performance.now();
+    const pasParMs = N / 40000;   // toute la course en 40 s
+    lecture = setInterval(() => { const maintenant = performance.now(); k += (maintenant - dernier) * pasParMs; dernier = maintenant;
+      if (k >= N - 1) { montrer(N - 1); arreterLecture(); } else montrer(k); }, 50);
+  };
+  montrer(0);
+}
+
 /* ---------- Ma course : page de la course dans l'onglet profil, recalculée au temps du coureur ---------- */
 // La grille de « Rechercher une course » est déplacée ici le temps de la vue, puis rendue à son onglet
 const grille = document.querySelector("#courses .grille"), maisonGrille = document.getElementById("courses");
 let vueCoureur = null;
 function rendreGrille() {
+  arreterLecture(); document.getElementById("mc-timeline").hidden = true;
   if (grille.parentElement === maisonGrille) return;
   maisonGrille.appendChild(grille); document.getElementById("bloc-historique").hidden = false;
   document.getElementById("ma-course").hidden = true; vueCoureur = null;
@@ -1338,6 +1513,7 @@ function rendreGrille() {
 function dessinerVueCoureur() {
   const { course, ed, r, res } = vueCoureur, aide = document.getElementById("mc-aide");
   if (!res) {   // abandon : l'édition telle quelle, pour son coureur médian
+    document.getElementById("mc-timeline").hidden = true;
     const e = { ...ed };
     afficherCourse(course, e); aide.textContent = t("mc_abandon", ed.edition); return;
   }
@@ -1349,6 +1525,7 @@ function dessinerVueCoureur() {
   document.getElementById("c-temps-titre").textContent = t("votre_temps");
   document.getElementById("secret").hidden = true;
   const a = r.activite;
+  timeline(course, r, res, vueCoureur.de);
   aide.textContent = a ? t("mc_gps", a.fichier, hhmm(a.mouvement_h), hhmm(a.pause_h), a.intensite ? t("act_fc", fmt(a.intensite, 2), a.fc_moy) : a.fc_suspecte && a.fc_suspecte.length ? t("mc_fc_suspecte") : "")
                        : t("mc_temps", course.id, hhmm(r.temps_h));
 }
@@ -1365,6 +1542,7 @@ async function ouvrirMaCourse(r) {
   try {
     const de = await donneesEdition(b.course, b.ed);
     if (!vueCoureur || vueCoureur.r !== r) return;
+    vueCoureur.de = de;
     if (r.activite) {
       const a = r.activite, cal = { dt: a.dt.map(x => x / 3600), pause: a.pause.map(x => x / 3600), tMil: a.tMil };
       vueCoureur.res = scoreEditionReel(b.course, b.ed, de, cal, a.intensite || 1);

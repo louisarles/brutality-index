@@ -863,6 +863,8 @@ const RE_TEMPS = /^\d{1,3}:\d{2}:\d{2}$/;
 const RE_ANNEE = /^(19|20)\d{2}$/;
 const RE_A_SAUTER = /(connect|login|log in|sign in|index)/i;
 const RE_TIRET = /^[-–—]$/;   // score absent (abandon, coureur connecté)
+const RE_SCORE = /^(score\s*:?\s*)?\d+([.,]\d+)?\s*(pts?|points)?$/i;   // score de la course (coureur connecté), tout format
+const aSauter = s => RE_A_SAUTER.test(s) || RE_TIRET.test(s) || RE_SCORE.test(s);
 
 const lignesDe = texte => texte.split(/[\n\t\r]+/).map(s => s.trim()).filter(Boolean);
 
@@ -892,20 +894,21 @@ function lireFicheUtmb(texte) {
     fiche.index = valeurs[0] ?? null;
     CATEGORIES_INDEX.forEach((c, k) => { fiche.indexDistance[c] = valeurs[k + 1] ?? null; });
   }
-  // Courses : chaque ligne « 81.2 KM » suivie de « 5413 M+ » ouvre une course. En remontant : (score, « - » si
-  // abandon, ou « Connectez-vous… »), événement, course, date ; plus haut, l'année. En descendant : temps, rang, partants
-  // (ou « - » puis DNF).
+  // Courses : chaque ligne « 81.2 KM » suivie de « 5413 M+ » ouvre une course. En remontant jusqu'à la date (au
+  // plus 6 lignes) : entre les deux, le nom de course (avant-dernière ligne) et l'événement (dernière), une fois écartés le
+  // score (coureur connecté, tout format), « - » (abandon) et « Connectez-vous… » ; plus haut, l'année. En
+  // descendant : temps, rang, partants (ou « - » puis DNF).
   let annee = null;
   for (let k = 0; k < l.length; k++) {
     if (RE_ANNEE.test(l[k]) && k + 1 < l.length && RE_DATE.test(l[k + 1])) { annee = +l[k]; continue; }
     const km = RE_KM.exec(l[k]);
     if (!km || !RE_DPLUS.test(l[k + 1] || "")) continue;
-    let b = k - 1;
-    while (b > 0 && (RE_A_SAUTER.test(l[b]) || RE_TIRET.test(l[b]) || /^\d{2,4}$/.test(l[b]))) b--;
-    let date = "", course = "", evenement = "";
-    if (RE_DATE.test(l[b - 2] || "")) { date = l[b - 2]; course = l[b - 1]; evenement = l[b]; }
-    else if (RE_DATE.test(l[b - 1] || "")) { date = l[b - 1]; course = l[b]; }
-    else { course = l[b]; }
+    let d = k - 1;
+    while (d > k - 7 && d > 0 && !RE_DATE.test(l[d])) d--;
+    const date = RE_DATE.test(l[d] || "") ? l[d] : "";
+    const noms = (date ? l.slice(d + 1, k) : l.slice(Math.max(0, k - 3), k)).filter(x => !aSauter(x));
+    // 3 lignes ou plus (ex. « ÉQUIPE », « LE DUO DU ROC - TEAM », « TRAIL DES GLIERES ») : course = avant-dernière
+    const course = (noms.length > 1 ? noms[noms.length - 2] : noms[0]) || "", evenement = noms.length > 1 ? noms[noms.length - 1] : "";
     const r = { annee, date, course, evenement, km: +km[1].replace(",", "."), dplus: +RE_DPLUS.exec(l[k + 1])[1] };
     const t = l[k + 2] || "";
     if (RE_TEMPS.test(t)) {

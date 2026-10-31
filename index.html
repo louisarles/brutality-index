@@ -1380,16 +1380,16 @@ function afficherFicheSansGarde(f) {
   const tuile = (nom, v) => `<div><dt>${nom}</dt>${v === null || v === undefined ? `<dd class="vide">${t("sans_index")}</dd>` : `<dd>${v}</dd>`}</div>`;
   const dist = Object.entries(f.indexDistance).map(([k, v]) => tuile(k, v)).join("");
   const reconnues = f.resultats.filter(r => courseDeLaBase(r)?.ed).length;
-  // Index de brutalité du coureur : record = plus forte cote réalisée ; général = moyenne des cotes de ses courses
-  // terminées de la base (pas de catégories de distance : le grade ne dit pas la distance)
-  const cotes = f.resultats.map(coteCourse).filter(x => x != null);
+  // Index de brutalité du coureur : record = plus forte cote réalisée ; général = moyenne de ses 5 meilleures cotes
+  // (courses terminées de la base ; pas de catégories de distance : le grade ne dit pas la distance)
+  const cotes = f.resultats.map(coteCourse).filter(x => x != null).sort((a, b) => b - a), meilleures = cotes.slice(0, 5);
   const base = D.courses.map(c => `${c.id} ${c.editions.filter(e => e.edition !== "à venir").map(e => e.edition).join(", ")}`).join(" ; ");
   const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-ligne="${f.resultats.indexOf(r)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td><td>${celluleDepot(r, f.resultats.indexOf(r))}</td></tr>`; }).join("");
   z.innerHTML = `<h3 style="margin:16px 0 0;font:600 1.15rem var(--body)">${esc(f.nom)}</h3><p class="meta">${esc(f.pays)} · ${esc(f.categorie)}</p>
     <p class="etiquette" style="margin-top:14px">${t("utmb_index")}</p>
     <dl class="fiche-index">${tuile(t("index_general"), f.index)}${dist}</dl>
     <p class="etiquette" style="margin-top:14px">${t("brut_index")}</p>
-    <dl class="fiche-index">${tuile(t("brut_record"), cotes.length ? Math.round(Math.max(...cotes)) : null)}${tuile(t("index_general"), cotes.length ? Math.round(cotes.reduce((a, x) => a + x, 0) / cotes.length) : null)}</dl>
+    <dl class="fiche-index">${tuile(t("brut_record"), cotes.length ? Math.round(Math.max(...cotes)) : null)}${tuile(t("index_general"), meilleures.length ? Math.round(meilleures.reduce((a, x) => a + x, 0) / meilleures.length) : null)}</dl>
     <p class="aide">${reconnues ? t("cote_titre", reconnues) : t("cote_aucune", base)}</p>
     <div class="table-boite"><table class="editions"><thead><tr><th>${t("th_annee")}</th><th>${t("th_course")}</th><th class="n">${t("th_distance")}</th><th class="n">${t("th_dplus")}</th><th class="n">${t("th_temps_c")}</th><th class="n">${t("th_rang")}</th><th>${t("th_brutalite")}</th><th>${t("th_activite")}</th></tr></thead><tbody>${lignes}</tbody></table></div>
     <p class="aide">${t("resultats_lus", f.resultats.length, f.resultats.length > 40 ? t("plus_recents") : "")}</p>`;

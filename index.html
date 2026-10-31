@@ -116,6 +116,8 @@ h2 { font: 600 1.35rem/1.15 var(--body); margin: 0; text-wrap: balance; }
 .candidats { display: grid; gap: 6px; margin-top: 12px; }
 .candidats button { display: flex; justify-content: space-between; gap: 12px; text-align: left; font: 0.95rem var(--body); padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .candidats button:hover { border-color: var(--accent); }
+.ma-course-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 14px; }
+.ma-course-tete .aide { margin: 0; }
 .fiche-index { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px; }
 .fiche-index div { border-top: 1px solid var(--line); padding-top: 6px; }
 .fiche-index dt { font: 600 0.72rem var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
@@ -177,7 +179,7 @@ footer a { color: inherit; }
       <p class="secret" id="secret" hidden data-i18n="secret">Au-delà de 1000, le nom du grade ne se révèle qu'au coureur qui a réellement réalisé ce score, avec ses propres données.</p>
       <div class="echelle" id="echelle"></div>
       <dl class="chiffres">
-        <div><dt data-i18n="temps_median">Temps médian</dt><dd id="c-temps">—</dd></div>
+        <div><dt data-i18n="temps_median" id="c-temps-titre">Temps médian</dt><dd id="c-temps">—</dd></div>
         <div><dt data-i18n="abandons">Abandons</dt><dd id="c-dnf">—</dd></div>
         <div><dt data-i18n="de_nuit">De nuit</dt><dd id="c-nuit">—</dd></div>
       </dl>
@@ -205,7 +207,7 @@ footer a { color: inherit; }
       </dl>
     </section>
 
-    <section class="bloc" aria-labelledby="titre-editions">
+    <section class="bloc" aria-labelledby="titre-editions" id="bloc-historique">
       <p class="etiquette" data-i18n="toutes_editions">Toutes les éditions</p>
       <h2 id="titre-editions" data-i18n="historique">Historique</h2>
       <div class="table-boite"><table class="editions" id="editions"></table></div>
@@ -295,6 +297,13 @@ footer a { color: inherit; }
       <p class="enregistre" id="imp-etat" aria-live="polite"></p>
       <div id="imp-fiche"></div>
     </section>
+    <div id="ma-course" hidden>
+      <div class="ma-course-tete">
+        <button class="bouton secondaire" id="mc-retour" type="button" data-i18n="retour_fiche">← Retour à ma fiche</button>
+        <p class="aide" id="mc-aide" aria-live="polite"></p>
+      </div>
+      <div id="mc-place"></div>
+    </div>
     <section class="bloc" aria-labelledby="titre-profil">
       <p class="etiquette" data-i18n="onglet_profil">Mon profil</p>
       <h2 id="titre-profil" data-i18n="reperes_titre">Vos repères physiologiques</h2>
@@ -370,6 +379,10 @@ const I18N = {
     cote_aucune: "Aucune de vos courses n'est encore dans la base. Pour l'instant : {0}.",
     cote_hors_base: "édition hors base", th_brutalite: "Brutalité",
     index_general: "Général", sans_index: "aucun", voir_course: "Voir la course",
+    retour_fiche: "← Retour à ma fiche", votre_temps: "Votre temps", votre_course: "Votre course · édition {0}",
+    mc_temps: "Votre course recalculée à votre temps ({1}), avec la météo réelle de vos heures de passage, à un rythme réparti comme celui du coureur type.",
+    mc_abandon: "Abandon : pas de cote à votre nom. Voici l'édition {0} pour son coureur médian.",
+    mc_charge: "Chargement de la météo de l'édition…", mc_erreur: "Impossible de charger la météo de l'édition ({0}).",
     aria_echelle: "Position sur l'échelle des grades : {0}", aria_carte: "Carte du parcours de {0}, chaque kilomètre coloré selon sa brutalité",
     aria_profil: "Profil d'altitude de {0}, de {1} à {2} m", aria_courbe: "Cote prévue selon le temps sur {0}",
     termes: { "Durée": "Durée", "Distance": "Distance", "Technicité": "Technicité", "Météo": "Météo", "Altitude": "Altitude" },
@@ -426,6 +439,10 @@ const I18N = {
     cote_aucune: "None of your races is in the database yet. So far: {0}.",
     cote_hors_base: "edition not in database", th_brutalite: "Brutality",
     index_general: "Overall", sans_index: "none", voir_course: "See the race",
+    retour_fiche: "← Back to my profile", votre_temps: "Your time", votre_course: "Your race · {0} edition",
+    mc_temps: "Your race recomputed at your time ({1}), with the actual weather at your passing times, with a pace spread like the typical runner's.",
+    mc_abandon: "DNF: no score in your name. Here is the {0} edition for its median runner.",
+    mc_charge: "Loading the edition's weather…", mc_erreur: "Could not load the edition's weather ({0}).",
     aria_echelle: "Position on the grade scale: {0}", aria_carte: "Course map of {0}, each kilometre coloured by its brutality",
     aria_profil: "Elevation profile of {0}, from {1} to {2} m", aria_courbe: "Predicted score by finishing time on {0}",
     termes: { "Durée": "Duration", "Distance": "Distance", "Technicité": "Technicality", "Météo": "Weather", "Altitude": "Altitude" },
@@ -642,6 +659,12 @@ function historique(course, edCourante) {
 let courant = null;
 function choisir(entree) {
   courant = entree; const { course, ed } = entree;
+  if (vueCoureur) return;   // la grille est dans l'onglet profil : on la rendra à son retour
+  afficherCourse(course, ed); historique(course, ed);
+  if (typeof ongletCourant === "undefined" || ongletCourant === "courses") { try { history.replaceState(null, "", "#" + entree.jeton); } catch (e) {} }
+}
+function afficherCourse(course, ed) {
+  document.getElementById("c-temps-titre").textContent = t("temps_median");
   document.getElementById("eti-edition").textContent = ed.edition === "à venir" ? t("prochaine") : t("edition", ed.edition);
   document.getElementById("titre-course").textContent = course.nom;
   document.getElementById("meta-course").textContent = `${fmt(course.distance_km)} km · ${fmt(course.dplus_m)} m D+`;
@@ -653,8 +676,7 @@ function choisir(entree) {
   document.getElementById("c-temps").textContent = hhmm(ed.temps_h);
   document.getElementById("c-dnf").textContent = fmt(ed.dnf_pct, 1) + " %";
   document.getElementById("c-nuit").textContent = fmt(ed.nuit_pct) + " %";
-  echelle(ed.index); carte(course, ed); decomposition(ed); historique(course, ed);
-  if (typeof ongletCourant === "undefined" || ongletCourant === "courses") { try { history.replaceState(null, "", "#" + entree.jeton); } catch (e) {} }
+  echelle(ed.index); carte(course, ed); decomposition(ed);
 }
 
 const q = document.getElementById("q"), res = document.getElementById("resultats");
@@ -743,6 +765,63 @@ function scorePrevu(course, T) {
   const fDnf = (1 / (1 - m.dnf_median_pct / 100)) ** D.beta_dnf, avec = brut * fDnf * m.facteur_autonomie;
   const index = D.compression.A * Math.log1p(avec / D.compression.S0);
   return { brut, fDnf, avec, index, termes: { "Durée": t.duree, "Distance": t.charge, "Technicité": t.tech, "Météo": t.th + t.vent, "Altitude": t.alt }, nuit_pct: 100 * t.nuit_h / T };
+}
+
+/* ---------- Moteur d'une édition passée (port de scoreParcours.score_parcours, météo heure par heure) ---------- */
+// Données : statique_<course>.json (tracé, règles de terrain) et meteo/<course>_<année>.json (WBGT, vent de face,
+// densité, neige, part de sol humide, pluie, par heure et par bloc de km), écrits par Code/exportMeteoEditions.py
+const PERTE_TECH = 0.046, ETA_NEIGE = 1.26, SEUIL_NEIGE_CM = 1, NEIGE_PROFONDE_CM = 35, T_FACILE = 2, T_BOUE = 4, PLUIE_MMH = 1, T_GLISSANT = 5;
+const WBGT_BAS = 7.5, WBGT_HAUT = 15, PENTE_CHAUD = 0.011, PENTE_FROID = 0.005, RALENTI_MAX = 0.6;
+const surcoutThermique = w => { const r = w > WBGT_HAUT ? PENTE_CHAUD * (w - WBGT_HAUT) : w < WBGT_BAS ? PENTE_FROID * (WBGT_BAS - w) : 0; return 1 / (1 - Math.min(r, RALENTI_MAX)) - 1; };
+const fichiersJSON = {};
+const chargerJSON = chemin => fichiersJSON[chemin] ??= fetch(chemin).then(r => { if (!r.ok) throw new Error(`${chemin} : ${r.status}`); return r.json(); }).catch(e => { delete fichiersJSON[chemin]; throw e; });
+const donneesEdition = (course, ed) => Promise.all([chargerJSON(`statique_${course.id}.json`), chargerJSON(`meteo/${course.id}_${ed.edition}.json`)]).then(([st, me]) => ({ st, me }));
+function scoreEdition(course, ed, de, T) {
+  const m = course.moteur, { st, me } = de, n = m.dd.length, t0 = Date.parse(me.depart), H = me.heures - 1;
+  const l = m.dd.map(d => d * 1000), total = m.dd.reduce((a, b) => a + b, 0);
+  const lin = (c, j, t) => { const h = Math.max(0, Math.min(H, t)), k = Math.floor(h), k1 = Math.min(k + 1, H), a = h - k, b = st.bloc[j]; return (1 - a) * me[c][k][b] + a * me[c][k1][b]; };
+  const proche = (c, j, t) => me[c][Math.max(0, Math.min(H, Math.round(t)))][st.bloc[j]];
+  const tMil = new Array(n), nuit = new Array(n), neige = new Array(n), humide = new Array(n), pluie = new Array(n);
+  const perte = new Array(n), eta = new Array(n);
+  let cum = 0; for (let j = 0; j < n; j++) { cum += m.dd[j]; tMil[j] = cum / total * T; }
+  let v0, v, dt;
+  for (let it = 0; it < 4; it++) {
+    for (let j = 0; j < n; j++) {   // conditions à l'heure de passage, puis règles de terrain (coefficients_terrain)
+      const t = tMil[j];
+      nuit[j] = hauteurSoleil(t0 + t * 3600000, m.lat[j], m.lon[j]) < -0.833;
+      neige[j] = proche("neige", j, t); humide[j] = proche("humide", j, t) >= 0.5; pluie[j] = proche("pluie", j, t);
+      const enneige = neige[j] >= SEUIL_NEIGE_CM, glacier = st.glacier[j] === 1, tech = st.tech[j];
+      const tasse = glacier || (enneige && (st.osm_absent[j] === 1 || neige[j] > NEIGE_PROFONDE_CM || tech <= T_FACILE));
+      let te = st.boue_possible[j] === 1 && humide[j] && !enneige && !glacier ? Math.max(tech, T_BOUE) : tech;
+      if (te >= T_GLISSANT && pluie[j] >= PLUIE_MMH) te += 1;
+      eta[j] = glacier || enneige ? ETA_NEIGE : 1; perte[j] = PERTE_TECH * (tasse ? 0 : te);
+    }
+    const inv = m.c.map((c, j) => 1 / (c * m.g[j] * (nuit[j] ? BONUS_NUIT : 1)));
+    const ecart = K => { let s = 0; for (let j = 0; j < n; j++) s += l[j] * eta[j] / (K * inv[j] - perte[j]); return s / 3600 - T; };
+    let lo = 1e-6; for (let j = 0; j < n; j++) lo = Math.max(lo, perte[j] / inv[j] * (1 + 1e-9));
+    let hi = 100;
+    for (let k = 0; k < 80; k++) { const mid = (lo + hi) / 2; if (ecart(mid) > 0) lo = mid; else hi = mid; }
+    const K = (lo + hi) / 2;
+    v0 = inv.map(x => K * x); v = v0.map((x, j) => (x - perte[j]) / eta[j]); dt = v.map((x, j) => l[j] / x / 3600);
+    cum = 0; for (let j = 0; j < n; j++) { tMil[j] = cum + dt[j] / 2; cum += dt[j]; }
+  }
+  const tm = { duree: 0, charge: 0, tech: 0, th: 0, vent: 0, alt: 0, nuit_h: 0 }; let brut = 0;
+  const kms = ed.km.map(r => r.slice()), parKm = {}; ed.km.forEach((r, k) => { parKm[r[COL.km]] = k; });
+  const agr = kms.map(() => ({ cout: 0, neige: 0, boue: 0, wbgt: 0, vent: 0, nuit: 0, heure: 0, n: 0 }));
+  cum = 0;
+  for (let j = 0; j < n; j++) {
+    const t = tMil[j], wbgt = lin("wbgt", j, t), face = lin("vent", j, t), densite = lin("densite", j, t);
+    const sTh = surcoutThermique(wbgt), sV = surcoutVent(v[j], m.pente[j], face, densite), sAlt = m.s_alt[j];
+    const duree = RYTHME_NORMAL * dt[j] * (nuit[j] ? BONUS_NUIT : 1), charge = m.c[j] * m.dd[j] * m.g[j], tech = charge * (v0[j] / v[j] - 1);
+    const a = duree + charge + tech, cout = a * (1 + sTh) * (1 + sV) * (1 + sAlt);
+    tm.duree += duree; tm.charge += charge; tm.tech += tech; tm.th += a * sTh; tm.vent += a * (1 + sTh) * sV;
+    tm.alt += a * (1 + sTh) * (1 + sV) * sAlt; if (nuit[j]) tm.nuit_h += dt[j]; brut += cout;
+    const k = parKm[Math.floor(cum + m.dd[j] / 2)]; cum += m.dd[j];
+    if (k !== undefined) { const g = agr[k]; g.cout += cout; g.neige = Math.max(g.neige, neige[j]); g.boue = g.boue || (st.boue_possible[j] === 1 && humide[j] && neige[j] < SEUIL_NEIGE_CM && st.glacier[j] !== 1); g.wbgt += wbgt; g.vent += face * 3.6; g.nuit += nuit[j] ? 1 : 0; g.heure += t; g.n++; }
+  }
+  agr.forEach((g, k) => { if (!g.n) return; const r = kms[k]; r[COL.cout] = +g.cout.toFixed(2); r[COL.neige_cm] = Math.round(g.neige); r[COL.boue] = g.boue ? 1 : 0; r[COL.wbgt] = +(g.wbgt / g.n).toFixed(1); r[COL.vent_face] = +(g.vent / g.n).toFixed(1); r[COL.nuit] = 2 * g.nuit >= g.n ? 1 : 0; r[COL.heure] = +(g.heure / g.n).toFixed(1); });
+  const avec = brut * ed.facteur_dnf * ed.facteur_autonomie, index = D.compression.A * Math.log1p(avec / D.compression.S0);
+  return { brut, index, km: kms, nuit_pct: 100 * tm.nuit_h / T, termes: { "Durée": tm.duree, "Distance": tm.charge, "Technicité": tm.tech, "Météo": tm.th + tm.vent, "Altitude": tm.alt } };
 }
 function nomGrade(index, langue) { const i = rangGrade(index); return langue === "en" ? D.grades[i].en : D.grades[i].fr; }
 
@@ -955,13 +1034,15 @@ function celluleCote(r) {
   const idx = r.abandon ? null : coteAuTemps(b.ed, r.temps_h);
   if (idx === null) return "—";
   const v = Math.round(idx), i = rangGrade(v), jeton = (b.course.id + "-" + b.ed.edition).toLowerCase();
-  return `<button type="button" class="cote-lien" data-jeton="${esc(jeton)}"><span class="pastille" style="background:${couleurGrade(i)}"></span>${fmt(v)} · ${nomGradeRealise(v)}</button>`;
+  return `<button type="button" class="cote-lien"><span class="pastille" style="background:${couleurGrade(i)}"></span>${fmt(v)} · ${nomGradeRealise(v)}</button>`;
 }
 function afficherFiche(f) {
   try { afficherFicheSansGarde(f); }
   catch (e) { erreurImport(t("erreur_affichage", String(e && e.message || e))); }
 }
+let ficheCourante = null;
 function afficherFicheSansGarde(f) {
+  ficheCourante = f;
   const z = document.getElementById("imp-fiche"); z.textContent = "";
   document.getElementById("imp-oublier").hidden = !f;
   if (!f) return;
@@ -969,7 +1050,7 @@ function afficherFicheSansGarde(f) {
   const dist = Object.entries(f.indexDistance).map(([k, v]) => tuile(k, v)).join("");
   const reconnues = f.resultats.filter(r => courseDeLaBase(r)?.ed).length;
   const base = D.courses.map(c => `${c.id} ${c.editions.filter(e => e.edition !== "à venir").map(e => e.edition).join(", ")}`).join(" ; ");
-  const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-jeton="${esc(j)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td></tr>`; }).join("");
+  const lignes = f.resultats.filter((r, k) => k < 40 || courseDeLaBase(r)).map(r => { const b = courseDeLaBase(r), j = b && b.ed ? (b.course.id + "-" + b.ed.edition).toLowerCase() : ""; return `<tr${j ? ` class="reconnue" data-ligne="${f.resultats.indexOf(r)}" title="${t("voir_course")}"` : ""}><td>${r.annee}</td><td>${esc(r.course)}</td><td class="n">${fmt(r.km, 1)} km</td><td class="n">${r.dplus === null ? "—" : fmt(r.dplus)} m</td><td class="n">${r.abandon ? t("abandon") : esc(r.temps)}</td><td class="n">${r.abandon ? "—" : `${r.rang} / ${r.partants}`}</td><td>${celluleCote(r)}</td></tr>`; }).join("");
   z.innerHTML = `<h3 style="margin:16px 0 0;font:600 1.15rem var(--body)">${esc(f.nom)}</h3><p class="meta">${esc(f.pays)} · ${esc(f.categorie)}</p>
     <p class="etiquette" style="margin-top:14px">${t("utmb_index")}</p>
     <dl class="fiche-index">${tuile(t("index_general"), f.index)}${dist}</dl>
@@ -978,10 +1059,56 @@ function afficherFicheSansGarde(f) {
     <p class="aide">${t("resultats_lus", f.resultats.length, f.resultats.length > 40 ? t("plus_recents") : "")}</p>`;
 }
 document.getElementById("imp-fiche").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-jeton]"); if (!b) return;
-  const e = entrees.find(x => x.jeton === b.dataset.jeton); if (!e) return;
-  choisir(e); ouvrir("courses"); window.scrollTo(0, 0);
+  const b = ev.target.closest("[data-ligne]"); if (!b) return;
+  const f = profilLu().ficheUtmb || ficheCourante; const r = f && f.resultats[+b.dataset.ligne];
+  if (r) ouvrirMaCourse(r);
 });
+/* ---------- Ma course : page de la course dans l'onglet profil, recalculée au temps du coureur ---------- */
+// La grille de « Rechercher une course » est déplacée ici le temps de la vue, puis rendue à son onglet
+const grille = document.querySelector("#courses .grille"), maisonGrille = document.getElementById("courses");
+let vueCoureur = null;
+function rendreGrille() {
+  if (grille.parentElement === maisonGrille) return;
+  maisonGrille.appendChild(grille); document.getElementById("bloc-historique").hidden = false;
+  document.getElementById("ma-course").hidden = true; vueCoureur = null;
+  document.getElementById("c-temps-titre").textContent = t("temps_median");
+}
+function dessinerVueCoureur() {
+  const { course, ed, r, res } = vueCoureur, aide = document.getElementById("mc-aide");
+  if (!res) {   // abandon : l'édition telle quelle, pour son coureur médian
+    const e = { ...ed };
+    afficherCourse(course, e); aide.textContent = t("mc_abandon", ed.edition); return;
+  }
+  const v = Math.round(res.index), i = rangGrade(v);
+  const e = { ...ed, index: res.index, termes: res.termes, km: res.km, temps_h: r.temps_h, nuit_pct: res.nuit_pct,
+              grade: i === D.grades.length - 1 ? D.grade_realise.fr : D.grades[i].fr, grade_en: i === D.grades.length - 1 ? D.grade_realise.en : D.grades[i].en };
+  afficherCourse(course, e);
+  document.getElementById("eti-edition").textContent = t("votre_course", ed.edition);
+  document.getElementById("c-temps-titre").textContent = t("votre_temps");
+  document.getElementById("secret").hidden = true;
+  aide.textContent = t("mc_temps", course.id, hhmm(r.temps_h));
+}
+async function ouvrirMaCourse(r) {
+  const b = courseDeLaBase(r); if (!b || !b.ed) return;
+  const place = document.getElementById("mc-place"), aide = document.getElementById("mc-aide");
+  document.getElementById("imp-fiche").closest("section").hidden = true;
+  document.getElementById("ma-course").hidden = false;
+  place.appendChild(grille); document.getElementById("bloc-historique").hidden = true;
+  vueCoureur = { course: b.course, ed: b.ed, r, res: null };
+  window.scrollTo(0, 0);
+  if (r.abandon || !(r.temps_h > 0)) { dessinerVueCoureur(); return; }
+  aide.textContent = t("mc_charge");
+  try {
+    const de = await donneesEdition(b.course, b.ed);
+    if (!vueCoureur || vueCoureur.r !== r) return;
+    vueCoureur.res = scoreEdition(b.course, b.ed, de, r.temps_h); dessinerVueCoureur();
+  } catch (e) { aide.textContent = t("mc_erreur", String(e && e.message || e)); }
+}
+document.getElementById("mc-retour").addEventListener("click", () => {
+  rendreGrille(); document.getElementById("imp-fiche").closest("section").hidden = false;
+  if (courant) choisir(courant);
+});
+
 document.getElementById("imp-lire").addEventListener("click", () => {
   erreurImport(""); etatImport("");
   const texte = document.getElementById("imp-texte").value;
@@ -1007,6 +1134,7 @@ afficherFiche(profilLu().ficheUtmb || null);
 const ONGLETS = ["courses", "coureurs", "predicteur", "profil"];
 let ongletCourant = "courses", predicteurPret = false;
 function ouvrir(nom, majHash = true) {
+  if (nom !== "profil" && vueCoureur) { rendreGrille(); document.getElementById("imp-fiche").closest("section").hidden = false; if (courant) choisir(courant); }
   ongletCourant = nom;
   ONGLETS.forEach(o => { document.getElementById(o).hidden = o !== nom; document.getElementById("tab-" + o).setAttribute("aria-selected", o === nom ? "true" : "false"); });
   if (nom === "predicteur" && !predicteurPret) { predicteurPret = true; pCourse.dispatchEvent(new Event("change")); }
@@ -1030,7 +1158,7 @@ function changerLangue(l) {
 document.getElementById("lang-fr").addEventListener("click", () => changerLangue("fr"));
 document.getElementById("lang-en").addEventListener("click", () => changerLangue("en"));
 traduireStatique();
-const redessiner = () => { if (courant) choisir(courant); if (predicteurPret) depuisMenus(); ouvrir(ongletCourant, false); };
+const redessiner = () => { if (vueCoureur) dessinerVueCoureur(); else if (courant) choisir(courant); if (predicteurPret) depuisMenus(); ouvrir(ongletCourant, false); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redessiner);
 new MutationObserver(redessiner).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 </script>

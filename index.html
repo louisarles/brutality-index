@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><rect width='120' height='120' rx='26' fill='%23141210'/><rect x='16' y='84' width='17' height='22' fill='%23EDE6DA'/><rect x='40' y='66' width='17' height='40' fill='%23EDE6DA'/><rect x='64' y='44' width='17' height='62' fill='%23EDE6DA'/><rect x='88' y='0' width='17' height='106' fill='%23E5481F'/></svg>">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -23,7 +23,7 @@
   --g1: #9CC8B4; --g2: #C8C36A; --g3: #E8B33A; --g4: #EE8A2E; --g5: #E5481F; --g6: #B8202A; --g7: #6E1424; --g8: #141210;
   --g-ink-light: #141210; --g-ink-dark: #F6F1E8; --g-ink-max: #E5481F;
   --cat-20k: #FFFF00; --cat-50k: #FC5A00; --cat-100k: #7EE064; --cat-100m: #F42020; --cat-encre: #000542;
-  --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --display: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;   /* Louis, 01/11 : tout en Plex Mono (zéro pointé), Anton seulement dans le logo */
   --body: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --rayon: 14px;
@@ -65,10 +65,10 @@ header { display: flex; flex-wrap: wrap; align-items: end; justify-content: spac
 @media (max-width: 860px) { .grille { grid-template-columns: minmax(0, 1fr); } }
 .bloc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--rayon); padding: 18px 20px; min-width: 0; }
 .etiquette { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
-h2 { font: 400 1.55rem/1.1 var(--display); letter-spacing: 0.01em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
 .meta { color: var(--muted); font-size: 0.92rem; margin: 4px 0 0; }
 .cote { display: flex; align-items: end; gap: 18px; flex-wrap: wrap; margin-top: 14px; }
-.index { font: 400 clamp(4.4rem, 11vw, 6.8rem)/0.85 var(--display); font-variant-numeric: tabular-nums; }
+.index { font: 600 clamp(3.8rem, 10vw, 6rem)/0.9 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .vignette svg { width: 56px; height: auto; display: block; }
 /* Pastille de grade (kit de Robin, .bi-pastille) */
 .grade { display: inline-flex; align-items: center; padding: 0.5em 0.9em; border-radius: 999px; font: 600 0.95rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -134,7 +134,7 @@ h2 { font: 400 1.55rem/1.1 var(--display); letter-spacing: 0.01em; text-transfor
 .sous-onglets button, .choix-source button { font: 600 0.8rem var(--body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
 .sous-onglets button[aria-selected="true"], .choix-source button[aria-pressed="true"] { color: var(--surface); background: var(--ink); border-color: var(--ink); }
 .sous-onglets button:hover, .choix-source button:hover { border-color: var(--ink); }
-.proba { font: 400 clamp(3.6rem, 9vw, 5.4rem)/0.9 var(--display); margin-top: 12px; }
+.proba { font: 600 clamp(3rem, 8vw, 4.6rem)/0.95 var(--display); letter-spacing: -0.03em; margin-top: 12px; }
 .vide { max-width: 62ch; }
 .vide p { color: var(--muted); }
 .formulaire { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 18px; margin-top: 14px; }
@@ -169,7 +169,7 @@ h2 { font: 400 1.55rem/1.1 var(--display); letter-spacing: 0.01em; text-transfor
 .fiche-index { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px; }
 .fiche-index div { border-top: 1px solid var(--line); padding-top: 6px; }
 .fiche-index dt { font: 600 0.72rem var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.fiche-index dd { margin: 2px 0 0; font: 400 1.7rem var(--display); }
+.fiche-index dd { margin: 2px 0 0; font: 600 1.5rem var(--display); }
 .fiche-index div:first-child dd { color: var(--accent-texte); }
 .fiche-index dd.vide { font: 400 0.85rem var(--body); color: var(--muted); padding-top: 8px; }
 @media (max-width: 520px) { .fiche-index { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -1032,6 +1032,7 @@ const dernieres = c => c.editions.filter(e => e.edition !== "à venir").slice(-(
 const partsCourse = c => { const s = {}; dernieres(c).forEach(e => Object.entries(e.termes).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; })); return parts(s); };
 const medianeParts = cs => { const p = cs.map(partsCourse); return Object.fromEntries(Object.keys(p[0]).map(k => [k, mediane(p.map(x => x[k]))])); };
 const passeesDe = c => c.editions.filter(e => e.edition !== "à venir");
+D.courses.forEach(c => c.editions.forEach(e => { e.km_aff = e.distance_km || c.distance_km; e.dplus_aff = e.dplus_m || c.dplus_m; }));
 const medianePartsEd = eds => { const p = eds.map(e => parts(e.termes)); return Object.fromEntries(Object.keys(p[0]).map(k => [k, mediane(p.map(x => x[k]))])); };
 const TOUTES_EDITIONS = D.courses.flatMap(passeesDe);
 const PARTS_REF = medianePartsEd(TOUTES_EDITIONS);
@@ -1100,11 +1101,11 @@ function decomposition(ed, course) {
 
 // Tri du tableau des éditions : 1 clic sur un titre = décroissant, 2 clics = croissant (null : ordre chronologique)
 let triHisto = null;
-const CLES_TRI = { edition: e => +e.edition, index: e => e.index, grade: e => e.index, temps: e => e.temps_h, dnf: e => e.dnf_pct };
+const CLES_TRI = { edition: e => +e.edition, index: e => e.index, grade: e => e.index, temps: e => e.temps_h, km: e => e.km_aff, dplus: e => e.dplus_aff, dnf: e => e.dnf_pct };
 function historique(course, edCourante) {
   const tb0 = document.getElementById("editions");
   const th = (col, cle, n) => `<th class="${n ? "n" : ""}" data-tri="${col}" aria-sort="${triHisto && triHisto.col === col ? (triHisto.sens < 0 ? "descending" : "ascending") : "none"}"><button type="button">${t(cle)}</button></th>`;
-  tb0.innerHTML = `<caption class="aide" style="caption-side:bottom;text-align:left">${t("tri_aide")}</caption><thead><tr>${th("edition", "th_edition")}${th("index", "th_index", 1)}${th("grade", "th_grade")}${th("temps", "th_temps", 1)}${th("dnf", "th_dnf", 1)}</tr></thead>`;
+  tb0.innerHTML = `<caption class="aide" style="caption-side:bottom;text-align:left">${t("tri_aide")}</caption><thead><tr>${th("edition", "th_edition")}${th("index", "th_index", 1)}${th("grade", "th_grade")}${th("temps", "th_temps", 1)}${th("km", "th_distance", 1)}${th("dplus", "th_dplus", 1)}${th("dnf", "th_dnf", 1)}</tr></thead>`;
   tb0.querySelectorAll("th[data-tri] button").forEach(b => b.addEventListener("click", () => {
     const col = b.parentElement.dataset.tri;
     triHisto = triHisto && triHisto.col === col ? { col, sens: -triHisto.sens } : { col, sens: -1 };
@@ -1117,7 +1118,7 @@ function historique(course, edCourante) {
     const i = rangGrade(e.index), tr = document.createElement("tr");
     tr.setAttribute("aria-current", e === edCourante ? "true" : "false"); tr.tabIndex = 0;
     tr.innerHTML = `<td>${e.edition}</td><td class="n">${fmt(e.index)}</td>` +
-      `<td><span class="pastille" style="background:${couleurGrade(i)}"></span>${nomGradeEd(e)}</td><td class="n">${hhmm(e.temps_h)}</td><td class="n">${fmt(e.dnf_pct, 1)} %</td>`;
+      `<td><span class="pastille" style="background:${couleurGrade(i)}"></span>${nomGradeEd(e)}</td><td class="n">${hhmm(e.temps_h)}</td><td class="n">${fmt(e.km_aff, 1)} km</td><td class="n">${fmt(e.dplus_aff)} m</td><td class="n">${fmt(e.dnf_pct, 1)} %</td>`;
     const aller = () => choisir(entrees.find(x => x.course === course && x.ed === e));
     tr.addEventListener("click", aller); tr.addEventListener("keydown", ev => { if (ev.key === "Enter") aller(); });
     tb.appendChild(tr);

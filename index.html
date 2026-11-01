@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><rect width='120' height='120' rx='26' fill='%23141210'/><rect x='16' y='84' width='17' height='22' fill='%23EDE6DA'/><rect x='40' y='66' width='17' height='40' fill='%23EDE6DA'/><rect x='64' y='44' width='17' height='62' fill='%23EDE6DA'/><rect x='88' y='0' width='17' height='106' fill='%23E5481F'/></svg>">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -15,17 +15,17 @@
 /* Layout : bandeau de recherche, puis deux colonnes — à gauche la cote (index, grade, décomposition), à droite le parcours (tracé et profil) ; une colonne sur téléphone */
 /* Identité visuelle de Robin (kit v1, 01/11/2026) : voir Identite/CHARTE_SITE.md, à respecter pour toute modification */
 :root {
-  --bi-noir: #141210; --bi-os: #EDE6DA; --bi-papier: #F6F1E8; --bi-sable: #E9E2D5; --bi-tuile: #24201C; --bi-eteint: #3A342E; --bi-lave: #E5481F;
-  --bg: var(--bi-sable); --surface: var(--bi-papier); --ink: var(--bi-noir); --muted: #6A6157; --line: #D6CCBC; --accent: var(--bi-lave);
+  --bi-noir: #141210; --bi-os: #EDE6DA; --bi-papier: #F6F1E8; --bi-sable: #E9E2D5; --bi-creme: #FAF7F1; --bi-blanc: #FFFFFF; --bi-tuile: #24201C; --bi-eteint: #3A342E; --bi-lave: #E5481F;
+  --bg: var(--bi-creme); --surface: var(--bi-blanc); --ink: var(--bi-noir); --muted: #6A6157; --line: #E4DCCE; --accent: var(--bi-lave);
   --accent-texte: #B33A16; --sur-accent: var(--bi-noir);
   --c1: #F3E6C9; --c2: #E8B33A; --c3: #EE8A2E; --c4: #E5481F; --c5: #B8202A;
-  --eau: #B4CBD0; --glace: #FBF8F2; --glace-bord: #CBD9DC; --route: #D3C8B6; --repere: var(--bi-noir);
+  --eau: #B4CBD0; --glace: #EAF1F3; --glace-bord: #C3D4D8; --route: #D3C8B6; --repere: var(--bi-noir);
   --g1: #9CC8B4; --g2: #C8C36A; --g3: #E8B33A; --g4: #EE8A2E; --g5: #E5481F; --g6: #B8202A; --g7: #6E1424; --g8: #141210;
   --g-ink-light: #141210; --g-ink-dark: #F6F1E8; --g-ink-max: #E5481F;
   --cat-20k: #FFFF00; --cat-50k: #FC5A00; --cat-100k: #7EE064; --cat-100m: #F42020; --cat-encre: #000542;
-  --display: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;   /* Louis, 01/11 : tout en Plex Mono (zéro pointé), Anton seulement dans le logo */
-  --body: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
-  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --display: Anton, Impact, "Arial Narrow", sans-serif;   /* Louis, 01/11 : la typo du logo pour les titres et les gros chiffres (Anton n'a qu'une graisse : 400) */
+  --body: "IBM Plex Sans", system-ui, "Segoe UI", Arial, sans-serif;   /* texte courant (le Plex Mono à zéro pointé faisait « trop machine à écrire ») */
+  --mono: var(--body);   /* chiffres alignés par font-variant-numeric: tabular-nums (body) */
   --rayon: 14px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -39,7 +39,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 .page > * { min-width: 0; }   /* un tableau large défile dans son cadre au lieu d'élargir la page */
-body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); margin: 0;
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); font-variant-numeric: tabular-nums; margin: 0;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
 .page { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
 header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
@@ -65,10 +65,10 @@ header { display: flex; flex-wrap: wrap; align-items: end; justify-content: spac
 @media (max-width: 860px) { .grille { grid-template-columns: minmax(0, 1fr); } }
 .bloc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--rayon); padding: 18px 20px; min-width: 0; }
 .etiquette { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
-h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+h2 { font: 400 1.6rem/1.1 var(--display); letter-spacing: 0.01em; text-transform: uppercase; margin: 0; text-wrap: balance; }
 .meta { color: var(--muted); font-size: 0.92rem; margin: 4px 0 0; }
 .cote { display: flex; align-items: end; gap: 18px; flex-wrap: wrap; margin-top: 14px; }
-.index { font: 600 clamp(3.8rem, 10vw, 6rem)/0.9 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.index { font: 400 clamp(4rem, 10vw, 6.4rem)/0.88 var(--display); letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .vignette svg { width: 56px; height: auto; display: block; }
 /* Pastille de grade (kit de Robin, .bi-pastille) */
 .grade { display: inline-flex; align-items: center; padding: 0.5em 0.9em; border-radius: 999px; font: 600 0.95rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -134,7 +134,7 @@ h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: 0.02em; text-transform
 .sous-onglets button, .choix-source button { font: 600 0.8rem var(--body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
 .sous-onglets button[aria-selected="true"], .choix-source button[aria-pressed="true"] { color: var(--surface); background: var(--ink); border-color: var(--ink); }
 .sous-onglets button:hover, .choix-source button:hover { border-color: var(--ink); }
-.proba { font: 600 clamp(3rem, 8vw, 4.6rem)/0.95 var(--display); letter-spacing: -0.03em; margin-top: 12px; }
+.proba { font: 400 clamp(3.2rem, 8vw, 4.8rem)/0.92 var(--display); letter-spacing: 0; margin-top: 12px; }
 .vide { max-width: 62ch; }
 .vide p { color: var(--muted); }
 .formulaire { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 18px; margin-top: 14px; }
@@ -169,7 +169,7 @@ h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: 0.02em; text-transform
 .fiche-index { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px; }
 .fiche-index div { border-top: 1px solid var(--line); padding-top: 6px; }
 .fiche-index dt { font: 600 0.72rem var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.fiche-index dd { margin: 2px 0 0; font: 600 1.5rem var(--display); }
+.fiche-index dd { margin: 2px 0 0; font: 400 1.9rem/1.1 var(--display); }
 .fiche-index div:first-child dd { color: var(--accent-texte); }
 .fiche-index dd.vide { font: 400 0.85rem var(--body); color: var(--muted); padding-top: 8px; }
 @media (max-width: 520px) { .fiche-index { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -192,7 +192,11 @@ tr.reconnue:hover td { background: var(--surface-2, rgba(127, 127, 127, 0.08)); 
 footer { color: var(--muted); font-size: 0.82rem; width: 100%; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 22px; }
 .pied-haut { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 22px 28px; }
 @media (max-width: 760px) { .pied-haut { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.pied-marque svg { width: 46px; height: auto; display: block; margin-bottom: 8px; } .pied-marque .lb { fill: var(--ink); } .pied-marque .ll { fill: var(--bi-lave); }
+.pied-logo { margin: 28px 0 0; line-height: 0; }
+.pied-logo svg { width: min(100%, 620px); height: auto; display: block; }
+.pied-logo .lb, .pied-logo .lm, .pied-logo .li { fill: var(--ink); } .pied-logo .ll { fill: var(--bi-lave); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pied-logo .li { fill: var(--bi-lave); } }
+:root[data-theme="dark"] .pied-logo .li { fill: var(--bi-lave); }
 .pied-col { display: grid; align-content: start; gap: 6px; }
 .pied-col a, .pied-col button { all: unset; cursor: pointer; color: var(--ink); font: 0.85rem var(--body); }
 .pied-col a:hover, .pied-col button:hover { color: var(--accent-texte); text-decoration: underline; text-underline-offset: 3px; }
@@ -505,7 +509,7 @@ footer a { color: inherit; }
 
   <footer id="pied">
     <div class="pied-haut">
-      <div class="pied-marque"><svg viewBox="12 0 102 114" aria-hidden="true"><rect x="16" y="106" width="8.5" height="8" class="lb"/><rect x="28.2" y="100" width="8.5" height="14" class="lb"/><rect x="40.4" y="93" width="8.5" height="21" class="lb"/><rect x="52.6" y="84" width="8.5" height="30" class="lb"/><rect x="64.8" y="73" width="8.5" height="41" class="lb"/><rect x="77" y="59" width="8.5" height="55" class="lb"/><rect x="89.2" y="42" width="8.5" height="72" class="lb"/><rect x="101.4" y="0" width="8.5" height="114" class="ll"/></svg><p data-i18n="pied_slogan">La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.</p></div>
+      <div class="pied-marque"><p data-i18n="pied_slogan">La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.</p></div>
       <nav class="pied-col" aria-labelledby="pied-t1"><p class="etiquette" id="pied-t1" data-i18n="pied_projet">Le projet</p>
         <button type="button" data-dialogue="a_propos" data-i18n="a_propos">À propos</button>
         <button type="button" data-dialogue="faq" data-i18n="faq">FAQ</button>
@@ -519,6 +523,7 @@ footer a { color: inherit; }
         <button type="button" data-dialogue="confidentialite" data-i18n="confidentialite">Confidentialité</button></nav>
     </div>
     <p class="pied-bas" id="pied-bas"></p>
+    <div class="pied-logo"><svg viewBox="46 36 346 92" aria-hidden="true"><g transform="translate(40 47.8) scale(0.6)"><rect x="16" y="106" width="8.5" height="8" class="lb"/><rect x="28.2" y="100" width="8.5" height="14" class="lb"/><rect x="40.4" y="93" width="8.5" height="21" class="lb"/><rect x="52.6" y="84" width="8.5" height="30" class="lb"/><rect x="64.8" y="73" width="8.5" height="41" class="lb"/><rect x="77" y="59" width="8.5" height="55" class="lb"/><rect x="89.2" y="42" width="8.5" height="72" class="lb"/><rect x="101.4" y="0" width="8.5" height="114" class="ll"/></g><path d="M140.4375 95.03999999999999V40.03999999999999H155.34375Q161.34375 40.03999999999999 164.078125 42.96187499999999Q166.8125 45.88374999999999 166.8125 52.60249999999999V55.00874999999999Q166.8125 58.88374999999999 165.421875 61.28999999999999Q164.03125 63.69624999999999 161.1875 64.44624999999999Q164.90625 65.38374999999999 166.171875 68.83687499999999Q167.4375 72.28999999999999 167.4375 77.25874999999999Q167.4375 82.60249999999999 166.4375 86.60249999999999Q165.4375 90.60249999999999 162.8125 92.82124999999999Q160.1875 95.03999999999999 155.34375 95.03999999999999ZM151.1875 60.75874999999999H153.4375Q154.96875 60.75874999999999 155.40625 59.57124999999999Q155.84375 58.38374999999999 155.84375 56.72749999999999V51.19624999999999Q155.84375 48.53999999999999 153.5 48.53999999999999H151.1875ZM152.28125 85.35249999999999Q156.5625 85.35249999999999 156.5625 81.28999999999999V74.41499999999999Q156.5625 72.07124999999999 155.859375 70.71187499999999Q155.15625 69.35249999999999 153.21875 69.35249999999999H151.1875V85.28999999999999Q151.875 85.35249999999999 152.28125 85.35249999999999ZM172.0625 95.03999999999999V40.03999999999999H188.9375Q193.15625 40.03999999999999 195.3125 41.96187499999999Q197.46875 43.88374999999999 198.203125 47.33687499999999Q198.9375 50.78999999999999 198.9375 55.44624999999999Q198.9375 59.94624999999999 197.796875 62.63374999999999Q196.65625 65.32124999999999 193.5 66.35249999999999Q196.09375 66.88374999999999 197.140625 68.93062499999999Q198.1875 70.97749999999999 198.1875 74.22749999999999V95.03999999999999H187.34375V73.50874999999999Q187.34375 71.10249999999999 186.359375 70.52437499999999Q185.375 69.94624999999999 183.1875 69.94624999999999V95.03999999999999ZM183.25 60.41499999999999H185.90625Q188.1875 60.41499999999999 188.1875 55.44624999999999Q188.1875 52.22749999999999 187.6875 51.22749999999999Q187.1875 50.22749999999999 185.8125 50.22749999999999H183.25ZM216.28125 95.53999999999999Q209.40625 95.53999999999999 206.15625 91.68062499999999Q202.90625 87.82124999999999 202.90625 80.32124999999999V40.03999999999999H213.59375V79.88374999999999Q213.59375 81.25874999999999 213.75 82.52437499999999Q213.90625 83.78999999999999 214.46875 84.60249999999999Q215.03125 85.41499999999999 216.28125 85.41499999999999Q217.5625 85.41499999999999 218.125 84.61812499999999Q218.6875 83.82124999999999 218.828125 82.53999999999999Q218.96875 81.25874999999999 218.96875 79.88374999999999V40.03999999999999H229.65625V80.32124999999999Q229.65625 87.82124999999999 226.40625 91.68062499999999Q223.15625 95.53999999999999 216.28125 95.53999999999999ZM239.59375 95.03999999999999V50.60249999999999H233.0625V40.03999999999999H257.125V50.60249999999999H250.59375V95.03999999999999ZM259.6875 95.03999999999999 265.0 40.03999999999999H283.65625L288.875 95.03999999999999H278.46875L277.6875 86.16499999999999H271.0625L270.375 95.03999999999999ZM271.84375 77.38374999999999H276.84375L274.4375 49.41499999999999H273.9375ZM293.25 95.03999999999999V40.03999999999999H304.25V85.66499999999999H315.5625V95.03999999999999ZM319.1875 95.03999999999999V40.03999999999999H329.8125V95.03999999999999ZM339.90625 95.03999999999999V50.60249999999999H333.375V40.03999999999999H357.4375V50.60249999999999H350.90625V95.03999999999999ZM368.15625 95.03999999999999V76.94624999999999L359.375 40.03999999999999H370.28125L373.34375 58.66499999999999L376.40625 40.03999999999999H387.28125L378.53125 76.94624999999999V95.03999999999999Z" class="lm"/><path d="M139.56 124.03999999999999V122.08H142.7V112.03999999999999H139.56V110.07999999999998H148.44V112.03999999999999H145.3V122.08H148.44V124.03999999999999ZM167.78 114.02H167.58V124.03999999999999H165.34V110.07999999999998H168.56L172.22 120.1H172.42V110.07999999999998H174.66V124.03999999999999H171.44ZM191.46 110.07999999999998H195.8Q198.52 110.07999999999998 199.85000000000002 111.88Q201.18 113.67999999999999 201.18 117.05999999999999Q201.18 120.46 199.85000000000002 122.25Q198.52 124.03999999999999 195.8 124.03999999999999H191.46ZM195.62 121.94Q197.06 121.94 197.75 121.0Q198.44 120.05999999999999 198.44 118.25999999999999V115.83999999999999Q198.44 114.05999999999999 197.75 113.11999999999999Q197.06 112.17999999999999 195.62 112.17999999999999H194.04V121.94ZM217.66 124.03999999999999V110.07999999999998H226.48V112.24H220.28V115.88H226.26V118.03999999999999H220.28V121.88H226.48V124.03999999999999ZM253.72 124.03999999999999H250.76L249.24 121.25999999999999L248.02 118.82H247.86L246.6 121.25999999999999L245.04 124.03999999999999H242.28L246.38 116.83999999999999L242.54 110.07999999999998H245.52L246.8 112.44L248.02 114.85999999999999H248.16L249.4 112.44L250.74 110.07999999999998H253.5L249.64 116.88Z" class="li"/></svg></div>
   </footer>
   <dialog id="dialogue" class="dialogue" aria-labelledby="dialogue-titre"><button type="button" class="bouton secondaire fermer" id="dialogue-fermer" data-i18n="fermer">Fermer</button><div id="dialogue-corps"></div></dialog>
 </div>
@@ -574,7 +579,7 @@ const I18N = {
     abandon: "abandon", utmb_index: "UTMB index", resultats_lus: "{0} résultat(s) lu(s){1}. Données issues d'utmb.world.", plus_recents: ", les 40 plus récents affichés",
     pied1: "{0}. Scores calculés tronçon par tronçon (100 m) pour le coureur médian : durée, distance, technicité, neige, boue, pluie, chaleur, vent, altitude (météo à l'heure de passage), puis taux d'abandon, degré d'autonomie. Données de travail, susceptibles d'évoluer.",
     pied2: 'Sources : fond de carte et terrain © les contributeurs d\'<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ; météo ERA5 et ERA5-Land du Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) ; tracés, temps et taux d\'abandon publiés par les organisateurs et les chronométreurs. Brutality Index est un projet indépendant, sans lien avec UTMB Group ni avec les organisateurs des courses citées.',
-    version: "Étalonnage v1 — 2026 (provisoire)",
+    version: "Version 1.0b — 2026",
     cote_titre: "{0} course(s) reconnue(s) dans la base : brutalité à votre temps réel, avec la météo de vos heures de passage. Cliquez sur une course pour la voir.",
     cote_aucune: "Aucune de vos courses n'est encore dans la base. Pour l'instant : {0}.",
     cote_hors_base: "édition hors base", cote_calcul: "calcul…", th_brutalite: "Brutalité",
@@ -603,7 +608,7 @@ const I18N = {
     aria_continuum: "Top {0} % des courses de la même catégorie ; chaque trait est une autre course",
     pied_slogan: "La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.", pied_projet: "Le projet", pied_contact: "Contact", pied_legal: "Informations légales",
     faq: "FAQ", methode: "Méthode et sources", code_source: "Le projet sur GitHub", conditions: "Termes et conditions", confidentialite: "Confidentialité", fermer: "Fermer",
-    pied_bas: "© 2026 Brutality Index · {0}. UTMB® et Ultra-Trail® sont des marques déposées d'UTMB Group ; Brutality Index est un projet indépendant, sans lien avec UTMB Group ni avec les organisateurs des courses citées.",
+    pied_bas: "© 2026 Brutality Index · {0}",
     dlg_faq: `<details open><summary>À quoi sert le Brutality Index ?</summary><p>La performance d'un coureur a déjà ses indices (la cote ITRA, l'index UTMB) ; la difficulté d'un effort, non. Or réussir une performance sur un effort très dur est, à notre sens, une plus grande prouesse. Le Brutality Index note la course elle-même : durée, dénivelé, terrain, nuit, météo, altitude, abandons, autonomie.</p></details>
 <details><summary>Et pour les organisateurs ?</summary><p>Beaucoup de courses demandent des qualifications pour s'inscrire (la Diagonale des Fous, par exemple, demande deux courses d'au moins 85 km-effort). Le km-effort ne regarde que la distance et le dénivelé ; le Brutality Index ajoute ce qui pèse sur la capacité à endurer un effort : le temps passé dehors, la nuit, le terrain, la chaleur, le froid, l'altitude.</p></details>
 <details><summary>Et pour les coureurs ?</summary><p>Pour se projeter : comparer des courses de formats très différents, savoir à quoi s'attendre, coter ses propres courses (l'index UTMB dit votre niveau, le Brutality Index dit ce que vous avez encaissé), estimer sa probabilité de finir d'après l'écart entre sa cote et celle de la course, ou prédire son nombre de tours sur une backyard, un format de plus en plus couru.</p></details>
@@ -626,14 +631,13 @@ const I18N = {
 <div class="champ"><label for="contact-message">Message</label><textarea id="contact-message" rows="6"></textarea></div>
 <p><button type="submit" class="bouton">Envoyer</button></p><p class="erreur" id="contact-erreur"></p>
 <p class="aide">Le bouton ouvre votre messagerie avec le message prêt à partir ; rien n'est envoyé ni stocké par le site.</p></form>`,
-    dlg_mentions: `<h3>Édition</h3><p>Site édité à titre personnel, sans but commercial, par Louis et Robin (contact : « Nous écrire », en bas de page).</p>
+    dlg_mentions: `<h3>Édition</h3><p>Site édité à titre personnel, sans but commercial, par Louis et Robin Arlès (contact : « Nous écrire », en bas de page).</p>
 <h3>Hébergement</h3><p>GitHub Pages, service de GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
 <h3>Propriété</h3><p>Voir « Termes et conditions ». Données de tiers sous leur licence (voir « Méthode et sources »).</p>`,
     dlg_methode: `<h3>Le calcul</h3><p>Scores calculés tronçon par tronçon (100 m) pour le coureur médian : durée, effort mécanique, technicité, neige, boue, pluie, chaleur, vent, altitude (météo à l'heure de passage), puis taux d'abandons et degré d'autonomie. {0}.</p>
 <h3>Les références</h3><p>Coût de la pente : Minetti et al., 2002. Technicité : échelle TSAT, perte de vitesse de Jidovtseff &amp; De Cock, 2026. Altitude : Wehrlin &amp; Hallén, 2006. Chaleur : WBGT, ralentissement de Mantzios et al., 2022. Vent : Pugh, 1971 ; Davies, 1980. Neige : Richmond et al., 2019. Rythme normal : Bossi et al., 2017.</p>
 <h3>Les données</h3><p>Fond de carte et terrain © les contributeurs d'<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ; météo ERA5 et ERA5-Land du Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) ; tracés, temps et taux d'abandon publiés par les organisateurs et les chronométreurs ; catégories UTMB relevées sur utmb.world.</p>`,
-    dlg_conditions: `<p>Brutality Index est un projet indépendant, à but informatif, sans lien avec UTMB Group, ni avec les organisateurs ou chronométreurs des courses citées. UTMB®, Ultra-Trail® et les noms de courses appartiennent à leurs titulaires.</p>
-<p>Les index, grades et prévisions sont des estimations issues d'un modèle en cours d'étalonnage ({0}). Ils ne remplacent ni le règlement d'une course, ni l'avis de son organisation, ni un avis médical : ne vous engagez pas sur une course en vous fiant à eux seuls.</p>
+    dlg_conditions: `<p>Brutality Index est un projet indépendant, à but informatif, sans lien avec UTMB Group, ni avec les organisateurs ou chronométreurs des courses citées. Les index, grades et prévisions sont des estimations issues de modèles basés sur des données théoriques et des résultats de courses. Ils ne remplacent ni le règlement d'une course, ni l'avis de son organisation, ni un avis médical : ne vous engagez pas sur une course en vous fiant à eux seuls.</p>
 <p>Les données de tiers restent sous leur licence : OpenStreetMap (ODbL), Copernicus et Open-Meteo (CC BY 4.0). Les textes, calculs et visuels du site appartiennent à Brutality Index ; vous pouvez les citer en renvoyant vers ce site.</p>`,
     dlg_confidentialite: `<p>Le site n'a ni compte, ni publicité, ni traceur. Ce que vous saisissez (profil, fiche utmb.world, activités GPX/FIT) reste dans votre navigateur (stockage local) et ne nous est jamais envoyé ; « Effacer ma fiche » l'efface.</p>
 <p>Exception : pour un tracé ou une activité hors base (prédicteur), ses coordonnées sont envoyées à OpenStreetMap (serveurs Overpass) et à Open-Meteo pour lire le terrain et la météo. Les polices viennent de Google Fonts.</p>`,
@@ -721,7 +725,7 @@ const I18N = {
     abandon: "DNF", utmb_index: "UTMB index", resultats_lus: "{0} result(s) read{1}. Data from utmb.world.", plus_recents: ", the 40 most recent shown",
     pied1: "{0}. Scores computed section by section (100 m) for the median runner: duration, distance, technicality, snow, mud, rain, heat, wind, altitude (weather at passing time), then drop-out rate and level of self-sufficiency. Working data, subject to change.",
     pied2: 'Sources: base map and terrain © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL); ERA5 and ERA5-Land weather from the Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); courses, times and drop-out rates published by race organisers and timing companies. Brutality Index is an independent project, not affiliated with UTMB Group or with the organisers of the races listed.',
-    version: "Calibration v1 — 2026 (provisional)",
+    version: "Version 1.0b — 2026",
     cote_titre: "{0} race(s) found in the database: brutality at your actual time, with the weather at your passing times. Click a race to see it.",
     cote_aucune: "None of your races is in the database yet. So far: {0}.",
     cote_hors_base: "edition not in database", cote_calcul: "computing…", th_brutalite: "Brutality",
@@ -750,7 +754,7 @@ const I18N = {
     aria_continuum: "Top {0}% of races in the same category; each tick is another race",
     pied_slogan: "How hard trail and ultra races are, kilometre by kilometre.", pied_projet: "The project", pied_contact: "Contact", pied_legal: "Legal",
     faq: "FAQ", methode: "Method and sources", code_source: "The project on GitHub", conditions: "Terms and conditions", confidentialite: "Privacy", fermer: "Close",
-    pied_bas: "© 2026 Brutality Index · {0}. UTMB® and Ultra-Trail® are registered trademarks of UTMB Group; Brutality Index is an independent project, not affiliated with UTMB Group or with the organisers of the races listed.",
+    pied_bas: "© 2026 Brutality Index · {0}",
     dlg_faq: `<details open><summary>What is the Brutality Index for?</summary><p>A runner's performance already has its indexes (the ITRA score, the UTMB index); the difficulty of an effort does not. Yet performing well on a very hard effort is, in our view, a greater feat. The Brutality Index rates the race itself: duration, elevation, terrain, night, weather, altitude, drop-outs, self-sufficiency.</p></details>
 <details><summary>What about race organisers?</summary><p>Many races require qualifying races to sign up (the Diagonale des Fous, for instance, asks for two races of at least 85 effort-km). Effort-km only looks at distance and elevation; the Brutality Index adds what weighs on the ability to endure: time spent out, night, terrain, heat, cold, altitude.</p></details>
 <details><summary>What about runners?</summary><p>To look ahead: compare races of very different formats, know what to expect, score your own races (the UTMB index tells your level, the Brutality Index tells what you went through), estimate your chance of finishing from the gap between your score and the race's, or predict your number of laps on a backyard, an increasingly popular format.</p></details>
@@ -773,14 +777,13 @@ const I18N = {
 <div class="champ"><label for="contact-message">Message</label><textarea id="contact-message" rows="6"></textarea></div>
 <p><button type="submit" class="bouton">Send</button></p><p class="erreur" id="contact-erreur"></p>
 <p class="aide">The button opens your email app with the message ready to go; nothing is sent or stored by the site.</p></form>`,
-    dlg_mentions: `<h3>Publisher</h3><p>Site published privately, on a non-commercial basis, by Louis and Robin (contact: “Write to us”, at the bottom of the page).</p>
+    dlg_mentions: `<h3>Publisher</h3><p>Site published privately, on a non-commercial basis, by Louis and Robin Arlès (contact: “Write to us”, at the bottom of the page).</p>
 <h3>Hosting</h3><p>GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States.</p>
 <h3>Ownership</h3><p>See “Terms and conditions”. Third-party data under their licences (see “Method and sources”).</p>`,
     dlg_methode: `<h3>The computation</h3><p>Scores computed section by section (100 m) for the median runner: duration, mechanical effort, technicality, snow, mud, rain, heat, wind, altitude (weather at passing time), then drop-out rate and level of self-sufficiency. {0}.</p>
 <h3>References</h3><p>Gradient cost: Minetti et al., 2002. Technicality: TSAT scale, speed loss from Jidovtseff &amp; De Cock, 2026. Altitude: Wehrlin &amp; Hallén, 2006. Heat: WBGT, slowdown from Mantzios et al., 2022. Wind: Pugh, 1971; Davies, 1980. Snow: Richmond et al., 2019. Normal pace: Bossi et al., 2017.</p>
 <h3>Data</h3><p>Base map and terrain © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL); ERA5 and ERA5-Land weather from the Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); courses, times and drop-out rates published by race organisers and timing companies; UTMB categories taken from utmb.world.</p>`,
-    dlg_conditions: `<p>Brutality Index is an independent project for information purposes, not affiliated with UTMB Group or with the organisers or timing companies of the races listed. UTMB®, Ultra-Trail® and race names belong to their owners.</p>
-<p>Indexes, grades and predictions are estimates from a model still being calibrated ({0}). They do not replace a race's rules, its organisers' advice or medical advice: do not commit to a race on their basis alone.</p>
+    dlg_conditions: `<p>Brutality Index is an independent project for information purposes, not affiliated with UTMB Group or with the organisers or timing companies of the races listed. Indexes, grades and predictions are estimates from models based on theoretical data and race results. They do not replace a race's rules, its organisers' advice or medical advice: do not commit to a race on their basis alone.</p>
 <p>Third-party data stay under their licences: OpenStreetMap (ODbL), Copernicus and Open-Meteo (CC BY 4.0). The site's texts, computations and visuals belong to Brutality Index; you may quote them with a link to this site.</p>`,
     dlg_confidentialite: `<p>The site has no accounts, no ads and no trackers. What you enter (profile, utmb.world profile, GPX/FIT activities) stays in your browser (local storage) and is never sent to us; “Clear my profile” erases it.</p>
 <p>Exception: for a track or activity outside the database (predictor), its coordinates are sent to OpenStreetMap (Overpass servers) and Open-Meteo to read terrain and weather. Fonts come from Google Fonts.</p>`,
@@ -2244,7 +2247,7 @@ function afficherFicheSansGarde(f) {
     <p class="etiquette" style="margin-top:14px">${t("utmb_index")}</p>
     <dl class="fiche-index">${tuile(t("index_general"), f.index)}${dist}</dl>
     <p class="etiquette" style="margin-top:14px">${t("brut_index")}</p>
-    <dl class="fiche-index">${tuile(t("brut_record"), cotes.length ? Math.round(Math.max(...cotes)) : null)}${tuile(t("index_general"), meilleures.length ? Math.round(meilleures.reduce((a, x) => a + x, 0) / meilleures.length) : null)}</dl>
+    <dl class="fiche-index">${tuile(t("index_general"), meilleures.length ? Math.round(meilleures.reduce((a, x) => a + x, 0) / meilleures.length) : null)}${tuile(t("brut_record"), cotes.length ? Math.round(Math.max(...cotes)) : null)}</dl>
     <p class="aide">${reconnues ? t("cote_titre", reconnues) : t("cote_aucune", base)}</p>
     <div class="table-boite"><table class="editions"><thead><tr><th>${t("th_annee")}</th><th>${t("th_course")}</th><th class="n">${t("th_distance")}</th><th class="n">${t("th_dplus")}</th><th class="n">${t("th_temps_c")}</th><th class="n">${t("th_rang")}</th><th>${t("th_brutalite")}</th><th>${t("th_activite")}</th></tr></thead><tbody>${lignes}</tbody></table></div>
     <p class="aide">${t("resultats_lus", f.resultats.length, f.resultats.length > 40 ? t("plus_recents") : "")}</p>`;

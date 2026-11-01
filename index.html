@@ -507,11 +507,14 @@ footer a { color: inherit; }
     <div class="pied-haut">
       <div class="pied-marque"><svg viewBox="12 0 102 114" aria-hidden="true"><rect x="16" y="106" width="8.5" height="8" class="lb"/><rect x="28.2" y="100" width="8.5" height="14" class="lb"/><rect x="40.4" y="93" width="8.5" height="21" class="lb"/><rect x="52.6" y="84" width="8.5" height="30" class="lb"/><rect x="64.8" y="73" width="8.5" height="41" class="lb"/><rect x="77" y="59" width="8.5" height="55" class="lb"/><rect x="89.2" y="42" width="8.5" height="72" class="lb"/><rect x="101.4" y="0" width="8.5" height="114" class="ll"/></svg><p data-i18n="pied_slogan">La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.</p></div>
       <nav class="pied-col" aria-labelledby="pied-t1"><p class="etiquette" id="pied-t1" data-i18n="pied_projet">Le projet</p>
+        <button type="button" data-dialogue="a_propos" data-i18n="a_propos">À propos</button>
         <button type="button" data-dialogue="faq" data-i18n="faq">FAQ</button>
         <button type="button" data-dialogue="methode" data-i18n="methode">Méthode et sources</button></nav>
       <nav class="pied-col" aria-labelledby="pied-t2"><p class="etiquette" id="pied-t2" data-i18n="pied_contact">Contact</p>
+        <button type="button" data-dialogue="contact" data-i18n="contact">Nous écrire</button>
         <a href="https://github.com/louisarles/brutality-index" target="_blank" rel="noopener" data-i18n="code_source">Le projet sur GitHub</a></nav>
       <nav class="pied-col" aria-labelledby="pied-t3"><p class="etiquette" id="pied-t3" data-i18n="pied_legal">Informations légales</p>
+        <button type="button" data-dialogue="mentions" data-i18n="mentions">Mentions légales</button>
         <button type="button" data-dialogue="conditions" data-i18n="conditions">Termes et conditions</button>
         <button type="button" data-dialogue="confidentialite" data-i18n="confidentialite">Confidentialité</button></nav>
     </div>
@@ -601,14 +604,31 @@ const I18N = {
     pied_slogan: "La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.", pied_projet: "Le projet", pied_contact: "Contact", pied_legal: "Informations légales",
     faq: "FAQ", methode: "Méthode et sources", code_source: "Le projet sur GitHub", conditions: "Termes et conditions", confidentialite: "Confidentialité", fermer: "Fermer",
     pied_bas: "© 2026 Brutality Index · {0}. UTMB® et Ultra-Trail® sont des marques déposées d'UTMB Group ; Brutality Index est un projet indépendant, sans lien avec UTMB Group ni avec les organisateurs des courses citées.",
-    dlg_faq: `<details open><summary>Qu'est-ce que le Brutality Index ?</summary><p>Une note de la difficulté d'une course telle qu'on la vit, de 0 à 1 000 et au-delà : l'UTMB vaut 700, la 6633 Arctic Ultra (617 km dans le Grand Nord canadien) vaut 1 000. Chaque palier de 150 points porte un grade, de Caresse à Boucherie ; au-delà de 1 000, le grade ne se révèle qu'à qui l'a réellement fait.</p></details>
-<details><summary>À quoi sert-il ?</summary><p>À comparer des courses de formats très différents (un 20 km technique, un 100 miles en altitude, une backyard), à savoir à quoi s'attendre avant de s'inscrire, et à coter ses propres courses : l'index UTMB dit votre niveau, le Brutality Index dit ce que vous avez encaissé.</p></details>
+    dlg_faq: `<details open><summary>À quoi sert le Brutality Index ?</summary><p>La performance d'un coureur a déjà ses indices (la cote ITRA, l'index UTMB) ; la difficulté d'un effort, non. Or réussir une performance sur un effort très dur est, à notre sens, une plus grande prouesse. Le Brutality Index note la course elle-même : durée, dénivelé, terrain, nuit, météo, altitude, abandons, autonomie.</p></details>
+<details><summary>Et pour les organisateurs ?</summary><p>Beaucoup de courses demandent des qualifications pour s'inscrire (la Diagonale des Fous, par exemple, demande deux courses d'au moins 85 km-effort). Le km-effort ne regarde que la distance et le dénivelé ; le Brutality Index ajoute ce qui pèse sur la capacité à endurer un effort : le temps passé dehors, la nuit, le terrain, la chaleur, le froid, l'altitude.</p></details>
+<details><summary>Et pour les coureurs ?</summary><p>Pour se projeter : comparer des courses de formats très différents, savoir à quoi s'attendre, coter ses propres courses (l'index UTMB dit votre niveau, le Brutality Index dit ce que vous avez encaissé), estimer sa probabilité de finir d'après l'écart entre sa cote et celle de la course, ou prédire son nombre de tours sur une backyard, un format de plus en plus couru.</p></details>
+<details><summary>Qu'est-ce que le Brutality Index, en chiffres ?</summary><p>Une note de 0 à 1 000 et au-delà : l'UTMB vaut 700, la 6633 Arctic Ultra (617 km dans le Grand Nord canadien) vaut 1 000. Chaque palier de 150 points porte un grade, de Caresse à Boucherie ; au-delà de 1 000, le grade ne se révèle qu'à qui l'a réellement fait.</p></details>
 <details><summary>Comment est-il calculé ?</summary><p>La course est découpée en tronçons de 100 m, parcourus par le coureur médian de l'édition, à son temps. Chaque tronçon coûte de la durée (les heures de nuit comptent plus), de l'effort mécanique (selon la pente, de plus en plus cher avec la fatigue), de la technicité (terrain OpenStreetMap, neige, boue, pluie), de la météo (chaleur, froid, vent à l'heure de passage) et de l'altitude. La somme est corrigée par le taux d'abandons et l'autonomie, puis ramenée sur l'échelle par une loi logarithmique. Chaque loi vient d'une étude publiée (voir « Méthode et sources »).</p></details>
-<details><summary>Quelle différence avec l'index UTMB ?</summary><p>L'index UTMB mesure la performance d'un coureur. Le Brutality Index mesure la course : un même coureur peut faire une grosse performance sur une course douce, ou finir loin sur une course brutale.</p></details>
 <details><summary>Comment avoir ma cote ?</summary><p>Dans « Mon profil », collez votre fiche utmb.world : chaque course reconnue reçoit sa cote à votre temps, avec la météo réelle de vos heures de passage. Déposez votre GPX ou FIT pour la calculer à votre vrai rythme, pauses comprises.</p></details>
 <details><summary>Que veulent dire les catégories et le « top x % » ?</summary><p>La catégorie (20K, 50K, 100K, 100M) est celle du site UTMB. Le « top x % » situe l'édition parmi toutes les éditions de la même catégorie dans notre base, de la moins à la plus brutale ; une course sans catégorie UTMB est comparée à toute la base.</p></details>
-<details><summary>Le prédicteur est-il fiable ?</summary><p>Pour une course de la base, il utilise le même moteur que les éditions passées. Pour un tracé GPX, il calcule tout en direct, avec des simplifications signalées. Les tours de backyard et la probabilité de finir reposent sur des règles provisoires, sans étude publiée : à prendre comme des ordres de grandeur.</p></details>
-<details><summary>Les chiffres peuvent-ils changer ?</summary><p>Oui : c'est un étalonnage de travail ({0}). La technicité dépend de la qualité d'OpenStreetMap, inégale selon les régions ; chaque correction de méthode recalcule toute la base.</p></details>`,
+<details><summary>Le prédicteur est-il fiable ?</summary><p>Pour une course de la base, il utilise le même moteur que les éditions passées. Pour un tracé GPX, il calcule tout en direct, avec des simplifications signalées. Les tours de backyard et la probabilité de finir reposent sur des règles provisoires, sans étude publiée : à prendre comme des ordres de grandeur. Les chiffres peuvent évoluer : c'est un étalonnage de travail ({0}).</p></details>
+<details><summary>D'où venez-vous, et où allez-vous ?</summary><p>Le projet est né entre frères, d'années d'efforts d'endurance partagés, en off comme en compétition (voir « À propos »). Notre ambition : régaler les passionnés de données (nous les premiers) avec ce concept, et proposer l'outil aux organisateurs de courses.</p></details>
+<details><summary>Comment aider le projet ?</summary><p>Une erreur sur une course, une course à ajouter, une idée d'amélioration : écrivez-nous (« Nous écrire », en bas de page). Chaque retour fait progresser la méthode.</p></details>`,
+    a_propos: "À propos", contact: "Nous écrire", mentions: "Mentions légales", contact_vide: "Écrivez d'abord votre message.",
+    dlg_a_propos: `<p><b>Louis et Robin</b>, frères et créateurs du projet. Passionnés d'endurance, nous avons une expérience en sciences du sport et en médecine.</p>
+<p>Le Brutality Index est né de l'envie de rationaliser un concept construit au fil des efforts d'endurance partagés depuis des années, en off (le GR20 en 4 jours) comme en compétition (la Diagonale des Fous 2026). Il est aussi devenu le terrain de jeu de deux passionnés de données.</p>
+<p>Identité visuelle : Robin.</p>`,
+    dlg_contact: `<p>Une erreur sur une course, une course à ajouter, une idée d'amélioration, une demande d'organisateur : écrivez-nous.</p>
+<form id="contact-form" class="formulaire" style="grid-template-columns:minmax(0,1fr)">
+<div class="champ"><label for="contact-nom">Votre nom</label><input id="contact-nom" autocomplete="name"></div>
+<div class="champ"><label for="contact-mail">Votre e-mail (pour vous répondre)</label><input id="contact-mail" type="email" autocomplete="email"></div>
+<div class="champ"><label for="contact-sujet">Sujet</label><select id="contact-sujet"><option>Suggestion d'amélioration</option><option>Erreur sur une course</option><option>Course à ajouter</option><option>Organisateur de course</option><option>Autre</option></select></div>
+<div class="champ"><label for="contact-message">Message</label><textarea id="contact-message" rows="6"></textarea></div>
+<p><button type="submit" class="bouton">Envoyer</button></p><p class="erreur" id="contact-erreur"></p>
+<p class="aide">Le bouton ouvre votre messagerie avec le message prêt à partir ; rien n'est envoyé ni stocké par le site.</p></form>`,
+    dlg_mentions: `<h3>Édition</h3><p>Site édité à titre personnel, sans but commercial, par Louis et Robin (contact : « Nous écrire », en bas de page).</p>
+<h3>Hébergement</h3><p>GitHub Pages, service de GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+<h3>Propriété</h3><p>Voir « Termes et conditions ». Données de tiers sous leur licence (voir « Méthode et sources »).</p>`,
     dlg_methode: `<h3>Le calcul</h3><p>Scores calculés tronçon par tronçon (100 m) pour le coureur médian : durée, effort mécanique, technicité, neige, boue, pluie, chaleur, vent, altitude (météo à l'heure de passage), puis taux d'abandons et degré d'autonomie. {0}.</p>
 <h3>Les références</h3><p>Coût de la pente : Minetti et al., 2002. Technicité : échelle TSAT, perte de vitesse de Jidovtseff &amp; De Cock, 2026. Altitude : Wehrlin &amp; Hallén, 2006. Chaleur : WBGT, ralentissement de Mantzios et al., 2022. Vent : Pugh, 1971 ; Davies, 1980. Neige : Richmond et al., 2019. Rythme normal : Bossi et al., 2017.</p>
 <h3>Les données</h3><p>Fond de carte et terrain © les contributeurs d'<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ; météo ERA5 et ERA5-Land du Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) ; tracés, temps et taux d'abandon publiés par les organisateurs et les chronométreurs ; catégories UTMB relevées sur utmb.world.</p>`,
@@ -731,14 +751,31 @@ const I18N = {
     pied_slogan: "How hard trail and ultra races are, kilometre by kilometre.", pied_projet: "The project", pied_contact: "Contact", pied_legal: "Legal",
     faq: "FAQ", methode: "Method and sources", code_source: "The project on GitHub", conditions: "Terms and conditions", confidentialite: "Privacy", fermer: "Close",
     pied_bas: "© 2026 Brutality Index · {0}. UTMB® and Ultra-Trail® are registered trademarks of UTMB Group; Brutality Index is an independent project, not affiliated with UTMB Group or with the organisers of the races listed.",
-    dlg_faq: `<details open><summary>What is the Brutality Index?</summary><p>A score of how hard a race is to live through, from 0 to 1,000 and beyond: the UTMB is worth 700, the 6633 Arctic Ultra (617 km in the Canadian far north) 1,000. Each 150-point step has a grade, from Caress to Butchery; above 1,000 the grade is only revealed to those who actually did it.</p></details>
-<details><summary>What is it for?</summary><p>To compare races of very different formats (a technical 20 km, a high-altitude 100 miles, a backyard), to know what to expect before signing up, and to score your own races: the UTMB index tells your level, the Brutality Index tells what you went through.</p></details>
+    dlg_faq: `<details open><summary>What is the Brutality Index for?</summary><p>A runner's performance already has its indexes (the ITRA score, the UTMB index); the difficulty of an effort does not. Yet performing well on a very hard effort is, in our view, a greater feat. The Brutality Index rates the race itself: duration, elevation, terrain, night, weather, altitude, drop-outs, self-sufficiency.</p></details>
+<details><summary>What about race organisers?</summary><p>Many races require qualifying races to sign up (the Diagonale des Fous, for instance, asks for two races of at least 85 effort-km). Effort-km only looks at distance and elevation; the Brutality Index adds what weighs on the ability to endure: time spent out, night, terrain, heat, cold, altitude.</p></details>
+<details><summary>What about runners?</summary><p>To look ahead: compare races of very different formats, know what to expect, score your own races (the UTMB index tells your level, the Brutality Index tells what you went through), estimate your chance of finishing from the gap between your score and the race's, or predict your number of laps on a backyard, an increasingly popular format.</p></details>
+<details><summary>What is the Brutality Index, in figures?</summary><p>A score from 0 to 1,000 and beyond: the UTMB is worth 700, the 6633 Arctic Ultra (617 km in the Canadian far north) 1,000. Each 150-point step has a grade, from Caress to Butchery; above 1,000 the grade is only revealed to those who actually did it.</p></details>
 <details><summary>How is it computed?</summary><p>The race is split into 100 m sections, run by the edition's median runner at their time. Each section costs duration (night hours count more), mechanical effort (by gradient, more and more expensive with fatigue), technicality (OpenStreetMap terrain, snow, mud, rain), weather (heat, cold, wind at passing time) and altitude. The total is adjusted for drop-outs and self-sufficiency, then put on the scale by a logarithmic law. Each law comes from a published study (see “Method and sources”).</p></details>
-<details><summary>How is it different from the UTMB index?</summary><p>The UTMB index measures a runner's performance. The Brutality Index measures the race: the same runner can perform very well on a gentle race, or finish far back on a brutal one.</p></details>
 <details><summary>How do I get my score?</summary><p>In “My profile”, paste your utmb.world profile: each recognised race gets its score at your time, with the real weather at your passing times. Drop your GPX or FIT to compute it at your real pace, stops included.</p></details>
 <details><summary>What do the categories and “top x%” mean?</summary><p>The category (20K, 50K, 100K, 100M) is the one on the UTMB website. “Top x%” places the edition among all editions of the same category in our database, from least to most brutal; a race without a UTMB category is compared with the whole database.</p></details>
-<details><summary>Is the predictor reliable?</summary><p>For a race in the database it uses the same engine as past editions. For a GPX track it computes everything live, with the simplifications shown. Backyard laps and the chance of finishing rely on provisional rules with no published study: take them as orders of magnitude.</p></details>
-<details><summary>Can the figures change?</summary><p>Yes: this is a working calibration ({0}). Technicality depends on OpenStreetMap quality, which varies by region; every method correction recomputes the whole database.</p></details>`,
+<details><summary>Is the predictor reliable?</summary><p>For a race in the database it uses the same engine as past editions. For a GPX track it computes everything live, with the simplifications shown. Backyard laps and the chance of finishing rely on provisional rules with no published study: take them as orders of magnitude. Figures may change: this is a working calibration ({0}).</p></details>
+<details><summary>Where do you come from, and where are you going?</summary><p>The project was born between brothers, from years of shared endurance efforts, unofficial as well as in races (see “About”). Our ambition: to delight data lovers (ourselves first) with this concept, and to offer the tool to race organisers.</p></details>
+<details><summary>How can I help?</summary><p>A mistake on a race, a race to add, an idea for improvement: write to us (“Write to us”, at the bottom of the page). Every piece of feedback improves the method.</p></details>`,
+    a_propos: "About", contact: "Write to us", mentions: "Legal notice", contact_vide: "Write your message first.",
+    dlg_a_propos: `<p><b>Louis and Robin</b>, brothers and creators of the project. Endurance enthusiasts, with a background in sport science and medicine.</p>
+<p>The Brutality Index was born from the wish to rationalise a concept built over years of shared endurance efforts, unofficial (the GR20 in 4 days) as well as in races (the Diagonale des Fous 2026). It has also become the playground of two data lovers.</p>
+<p>Visual identity: Robin.</p>`,
+    dlg_contact: `<p>A mistake on a race, a race to add, an idea for improvement, an organiser's request: write to us.</p>
+<form id="contact-form" class="formulaire" style="grid-template-columns:minmax(0,1fr)">
+<div class="champ"><label for="contact-nom">Your name</label><input id="contact-nom" autocomplete="name"></div>
+<div class="champ"><label for="contact-mail">Your email (so we can reply)</label><input id="contact-mail" type="email" autocomplete="email"></div>
+<div class="champ"><label for="contact-sujet">Subject</label><select id="contact-sujet"><option>Suggestion for improvement</option><option>Mistake on a race</option><option>Race to add</option><option>Race organiser</option><option>Other</option></select></div>
+<div class="champ"><label for="contact-message">Message</label><textarea id="contact-message" rows="6"></textarea></div>
+<p><button type="submit" class="bouton">Send</button></p><p class="erreur" id="contact-erreur"></p>
+<p class="aide">The button opens your email app with the message ready to go; nothing is sent or stored by the site.</p></form>`,
+    dlg_mentions: `<h3>Publisher</h3><p>Site published privately, on a non-commercial basis, by Louis and Robin (contact: “Write to us”, at the bottom of the page).</p>
+<h3>Hosting</h3><p>GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States.</p>
+<h3>Ownership</h3><p>See “Terms and conditions”. Third-party data under their licences (see “Method and sources”).</p>`,
     dlg_methode: `<h3>The computation</h3><p>Scores computed section by section (100 m) for the median runner: duration, mechanical effort, technicality, snow, mud, rain, heat, wind, altitude (weather at passing time), then drop-out rate and level of self-sufficiency. {0}.</p>
 <h3>References</h3><p>Gradient cost: Minetti et al., 2002. Technicality: TSAT scale, speed loss from Jidovtseff &amp; De Cock, 2026. Altitude: Wehrlin &amp; Hallén, 2006. Heat: WBGT, slowdown from Mantzios et al., 2022. Wind: Pugh, 1971; Davies, 1980. Snow: Richmond et al., 2019. Normal pace: Bossi et al., 2017.</p>
 <h3>Data</h3><p>Base map and terrain © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL); ERA5 and ERA5-Land weather from the Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); courses, times and drop-out rates published by race organisers and timing companies; UTMB categories taken from utmb.world.</p>`,
@@ -1150,7 +1187,23 @@ function piedDePage() { document.getElementById("pied-bas").innerHTML = t("pied_
 const dialogue = document.getElementById("dialogue");
 document.querySelectorAll("[data-dialogue]").forEach(b => b.addEventListener("click", () => {
   const n = b.dataset.dialogue; document.getElementById("dialogue-corps").innerHTML = `<h2 id="dialogue-titre">${t(n)}</h2>` + t("dlg_" + n, t("version"));
+  if (n === "contact") brancherContact();
   dialogue.showModal(); }));
+// Contact (choix de Louis : formulaire) : ouvre la messagerie du visiteur, adressé à Louis et Robin ; les adresses
+// sont reconstituées au clic (pas en clair dans la page). Un service d'envoi (Web3Forms…) éviterait la messagerie.
+const BOITES = [["louis.arles", "orange.fr"], ["robinarles", "orange.fr"]];
+function brancherContact() {
+  const f = document.getElementById("contact-form");
+  f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const v = id => document.getElementById(id).value.trim(), err = document.getElementById("contact-erreur");
+    if (!v("contact-message")) { err.textContent = t("contact_vide"); return; }
+    err.textContent = "";
+    const a = BOITES.map(([u, d]) => u + String.fromCharCode(64) + d), sujet = `[Brutality Index] ${v("contact-sujet")}`;
+    const corps = `${v("contact-message")}\n\n— ${v("contact-nom") || "?"}${v("contact-mail") ? " (" + v("contact-mail") + ")" : ""}`;
+    location.href = `mailto:${a[0]}?cc=${a[1]}&subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+  });
+}
 document.getElementById("dialogue-fermer").addEventListener("click", () => dialogue.close());
 dialogue.addEventListener("click", ev => { if (ev.target === dialogue) dialogue.close(); });
 piedDePage();

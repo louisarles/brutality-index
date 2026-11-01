@@ -188,7 +188,22 @@ tr.reconnue:hover td { background: var(--surface-2, rgba(127, 127, 127, 0.08)); 
 .langues button { display: inline-flex; align-items: center; gap: 6px; font: 600 0.8rem var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; cursor: pointer; }
 .langues button svg { width: 20px; height: 13px; border-radius: 2px; display: block; }
 .langues button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
-footer { color: var(--muted); font-size: 0.82rem; width: 100%; }
+/* Pied de page (sur le modèle d'utmb.world : marque, colonnes de liens, mentions) et dialogues FAQ / légal */
+footer { color: var(--muted); font-size: 0.82rem; width: 100%; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 22px; }
+.pied-haut { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 22px 28px; }
+@media (max-width: 760px) { .pied-haut { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pied-marque svg { width: 46px; height: auto; display: block; margin-bottom: 8px; } .pied-marque .lb { fill: var(--ink); } .pied-marque .ll { fill: var(--bi-lave); }
+.pied-col { display: grid; align-content: start; gap: 6px; }
+.pied-col a, .pied-col button { all: unset; cursor: pointer; color: var(--ink); font: 0.85rem var(--body); }
+.pied-col a:hover, .pied-col button:hover { color: var(--accent-texte); text-decoration: underline; text-underline-offset: 3px; }
+.pied-col a:focus-visible, .pied-col button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pied-bas { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.75rem; }
+.dialogue { max-width: min(760px, calc(100vw - 32px)); max-height: 82vh; border: 1px solid var(--line); border-radius: var(--rayon); background: var(--surface); color: var(--ink); padding: 22px 24px; font: 0.9rem/1.6 var(--body); }
+.dialogue::backdrop { background: rgba(20, 18, 16, 0.6); }
+.dialogue h2 { margin-bottom: 12px; } .dialogue h3 { font: 600 0.9rem var(--body); text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 4px; }
+.dialogue details { border-top: 1px solid var(--line); padding: 8px 0; } .dialogue summary { cursor: pointer; font-weight: 600; }
+.dialogue p { margin: 6px 0; } .dialogue a { color: var(--accent-texte); }
+.dialogue .fermer { float: right; margin: -6px -8px 0 0; }
 footer a { color: inherit; }
 @media (prefers-reduced-motion: no-preference) { .terme .barre i { transition: width 0.4s ease; } }
 </style>
@@ -488,7 +503,21 @@ footer a { color: inherit; }
     </section>
   </div>
 
-  <footer id="pied"></footer>
+  <footer id="pied">
+    <div class="pied-haut">
+      <div class="pied-marque"><svg viewBox="12 0 102 114" aria-hidden="true"><rect x="16" y="106" width="8.5" height="8" class="lb"/><rect x="28.2" y="100" width="8.5" height="14" class="lb"/><rect x="40.4" y="93" width="8.5" height="21" class="lb"/><rect x="52.6" y="84" width="8.5" height="30" class="lb"/><rect x="64.8" y="73" width="8.5" height="41" class="lb"/><rect x="77" y="59" width="8.5" height="55" class="lb"/><rect x="89.2" y="42" width="8.5" height="72" class="lb"/><rect x="101.4" y="0" width="8.5" height="114" class="ll"/></svg><p data-i18n="pied_slogan">La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.</p></div>
+      <nav class="pied-col" aria-labelledby="pied-t1"><p class="etiquette" id="pied-t1" data-i18n="pied_projet">Le projet</p>
+        <button type="button" data-dialogue="faq" data-i18n="faq">FAQ</button>
+        <button type="button" data-dialogue="methode" data-i18n="methode">Méthode et sources</button></nav>
+      <nav class="pied-col" aria-labelledby="pied-t2"><p class="etiquette" id="pied-t2" data-i18n="pied_contact">Contact</p>
+        <a href="https://github.com/louisarles/brutality-index" target="_blank" rel="noopener" data-i18n="code_source">Le projet sur GitHub</a></nav>
+      <nav class="pied-col" aria-labelledby="pied-t3"><p class="etiquette" id="pied-t3" data-i18n="pied_legal">Informations légales</p>
+        <button type="button" data-dialogue="conditions" data-i18n="conditions">Termes et conditions</button>
+        <button type="button" data-dialogue="confidentialite" data-i18n="confidentialite">Confidentialité</button></nav>
+    </div>
+    <p class="pied-bas" id="pied-bas"></p>
+  </footer>
+  <dialog id="dialogue" class="dialogue" aria-labelledby="dialogue-titre"><button type="button" class="bouton secondaire fermer" id="dialogue-fermer" data-i18n="fermer">Fermer</button><div id="dialogue-corps"></div></dialog>
 </div>
 
 <script>
@@ -566,9 +595,28 @@ const I18N = {
     moyenne_course_n: "Index de la course : {0} (moyenne des {1} dernières éditions)",
     th_terme: "Terme", th_points: "Points", th_part: "Part", th_mediane: "Méd. {0}", badge_dominante: "dominante",
     ref_base: "base", hors_categorie: "hors catégorie UTMB",
-    continuum_cat: "<b>Top {0} %</b> des courses {1} de la base ({2} courses), de la moins à la plus brutale",
-    continuum_hors: "Course <b>hors catégorie UTMB</b> : <b>top {0} %</b> de toute la base ({1} courses), de la moins à la plus brutale",
+    continuum_cat: "<b>Top {0} %</b> des éditions {1} de la base ({2} éditions), de la moins à la plus brutale",
+    continuum_hors: "Course <b>hors catégorie UTMB</b> : <b>top {0} %</b> de toutes les éditions de la base ({1}), de la moins à la plus brutale",
     aria_continuum: "Top {0} % des courses de la même catégorie ; chaque trait est une autre course",
+    pied_slogan: "La difficulté des courses de trail et d'ultra, kilomètre par kilomètre.", pied_projet: "Le projet", pied_contact: "Contact", pied_legal: "Informations légales",
+    faq: "FAQ", methode: "Méthode et sources", code_source: "Le projet sur GitHub", conditions: "Termes et conditions", confidentialite: "Confidentialité", fermer: "Fermer",
+    pied_bas: "© 2026 Brutality Index · {0}. UTMB® et Ultra-Trail® sont des marques déposées d'UTMB Group ; Brutality Index est un projet indépendant, sans lien avec UTMB Group ni avec les organisateurs des courses citées.",
+    dlg_faq: `<details open><summary>Qu'est-ce que le Brutality Index ?</summary><p>Une note de la difficulté d'une course telle qu'on la vit, de 0 à 1 000 et au-delà : l'UTMB vaut 700, la 6633 Arctic Ultra (617 km dans le Grand Nord canadien) vaut 1 000. Chaque palier de 150 points porte un grade, de Caresse à Boucherie ; au-delà de 1 000, le grade ne se révèle qu'à qui l'a réellement fait.</p></details>
+<details><summary>À quoi sert-il ?</summary><p>À comparer des courses de formats très différents (un 20 km technique, un 100 miles en altitude, une backyard), à savoir à quoi s'attendre avant de s'inscrire, et à coter ses propres courses : l'index UTMB dit votre niveau, le Brutality Index dit ce que vous avez encaissé.</p></details>
+<details><summary>Comment est-il calculé ?</summary><p>La course est découpée en tronçons de 100 m, parcourus par le coureur médian de l'édition, à son temps. Chaque tronçon coûte de la durée (les heures de nuit comptent plus), de l'effort mécanique (selon la pente, de plus en plus cher avec la fatigue), de la technicité (terrain OpenStreetMap, neige, boue, pluie), de la météo (chaleur, froid, vent à l'heure de passage) et de l'altitude. La somme est corrigée par le taux d'abandons et l'autonomie, puis ramenée sur l'échelle par une loi logarithmique. Chaque loi vient d'une étude publiée (voir « Méthode et sources »).</p></details>
+<details><summary>Quelle différence avec l'index UTMB ?</summary><p>L'index UTMB mesure la performance d'un coureur. Le Brutality Index mesure la course : un même coureur peut faire une grosse performance sur une course douce, ou finir loin sur une course brutale.</p></details>
+<details><summary>Comment avoir ma cote ?</summary><p>Dans « Mon profil », collez votre fiche utmb.world : chaque course reconnue reçoit sa cote à votre temps, avec la météo réelle de vos heures de passage. Déposez votre GPX ou FIT pour la calculer à votre vrai rythme, pauses comprises.</p></details>
+<details><summary>Que veulent dire les catégories et le « top x % » ?</summary><p>La catégorie (20K, 50K, 100K, 100M) est celle du site UTMB. Le « top x % » situe l'édition parmi toutes les éditions de la même catégorie dans notre base, de la moins à la plus brutale ; une course sans catégorie UTMB est comparée à toute la base.</p></details>
+<details><summary>Le prédicteur est-il fiable ?</summary><p>Pour une course de la base, il utilise le même moteur que les éditions passées. Pour un tracé GPX, il calcule tout en direct, avec des simplifications signalées. Les tours de backyard et la probabilité de finir reposent sur des règles provisoires, sans étude publiée : à prendre comme des ordres de grandeur.</p></details>
+<details><summary>Les chiffres peuvent-ils changer ?</summary><p>Oui : c'est un étalonnage de travail ({0}). La technicité dépend de la qualité d'OpenStreetMap, inégale selon les régions ; chaque correction de méthode recalcule toute la base.</p></details>`,
+    dlg_methode: `<h3>Le calcul</h3><p>Scores calculés tronçon par tronçon (100 m) pour le coureur médian : durée, effort mécanique, technicité, neige, boue, pluie, chaleur, vent, altitude (météo à l'heure de passage), puis taux d'abandons et degré d'autonomie. {0}.</p>
+<h3>Les références</h3><p>Coût de la pente : Minetti et al., 2002. Technicité : échelle TSAT, perte de vitesse de Jidovtseff &amp; De Cock, 2026. Altitude : Wehrlin &amp; Hallén, 2006. Chaleur : WBGT, ralentissement de Mantzios et al., 2022. Vent : Pugh, 1971 ; Davies, 1980. Neige : Richmond et al., 2019. Rythme normal : Bossi et al., 2017.</p>
+<h3>Les données</h3><p>Fond de carte et terrain © les contributeurs d'<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) ; météo ERA5 et ERA5-Land du Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0) ; tracés, temps et taux d'abandon publiés par les organisateurs et les chronométreurs ; catégories UTMB relevées sur utmb.world.</p>`,
+    dlg_conditions: `<p>Brutality Index est un projet indépendant, à but informatif, sans lien avec UTMB Group, ni avec les organisateurs ou chronométreurs des courses citées. UTMB®, Ultra-Trail® et les noms de courses appartiennent à leurs titulaires.</p>
+<p>Les index, grades et prévisions sont des estimations issues d'un modèle en cours d'étalonnage ({0}). Ils ne remplacent ni le règlement d'une course, ni l'avis de son organisation, ni un avis médical : ne vous engagez pas sur une course en vous fiant à eux seuls.</p>
+<p>Les données de tiers restent sous leur licence : OpenStreetMap (ODbL), Copernicus et Open-Meteo (CC BY 4.0). Les textes, calculs et visuels du site appartiennent à Brutality Index ; vous pouvez les citer en renvoyant vers ce site.</p>`,
+    dlg_confidentialite: `<p>Le site n'a ni compte, ni publicité, ni traceur. Ce que vous saisissez (profil, fiche utmb.world, activités GPX/FIT) reste dans votre navigateur (stockage local) et ne nous est jamais envoyé ; « Effacer ma fiche » l'efface.</p>
+<p>Exception : pour un tracé ou une activité hors base (prédicteur), ses coordonnées sont envoyées à OpenStreetMap (serveurs Overpass) et à Open-Meteo pour lire le terrain et la météo. Les polices viennent de Google Fonts.</p>`,
     st_avenir: "Prédire un événement", st_passe: "Évaluer une course passée", st_backyard: "Tours de backyard", st_finir: "Probabilité de finir",
     src_base: "Une course de la base", src_trace: "Un tracé GPX", psrc_base: "Une édition de la base", psrc_act: "Mon activité GPX / FIT",
     tl_etiquette: "Tracé hors base", tl_titre: "Votre cote sur votre tracé", tl_fichier: "Tracé GPX", tl_date: "Date de départ", tl_heure: "Heure de départ",
@@ -593,8 +641,8 @@ const I18N = {
     moyenne_course_1: "Index de la course : {0} (une seule édition)",
     parts_note: "Parts du score avant le facteur d'abandons (×{0}){1}.",
     parts_autonomie: " et d'autonomie (×{0})",
-    dominante: "Terme dominant : celui qui pèse le plus au-dessus de sa part médiane parmi les courses {0}.",
-    dominante_aucune: "Pas de terme dominant : chaque terme pèse à peu près comme dans les courses {0}.",
+    dominante: "Terme dominant : celui qui pèse le plus au-dessus de sa part médiane parmi les éditions {0}.",
+    dominante_aucune: "Pas de terme dominant : chaque terme pèse à peu près comme dans les éditions {0}.",
     parmi_cat: "de la catégorie {0}", parmi_base: "de toute la base (course hors catégorie UTMB)",
     sous_termes: { "De jour": "De jour", "De nuit": "De nuit", "Montées": "Montées", "Descentes": "Descentes", "Plat": "Plat",
                    "Fatigue": "Fatigue accumulée", "Terrain": "Terrain", "Boue": "Boue", "Pluie": "Pluie", "Neige et glace": "Neige et glace",
@@ -677,9 +725,28 @@ const I18N = {
     moyenne_course_n: "Race index: {0} (mean of the last {1} editions)",
     th_terme: "Term", th_points: "Points", th_part: "Share", th_mediane: "Med. {0}", badge_dominante: "dominant",
     ref_base: "DB", hors_categorie: "outside UTMB categories",
-    continuum_cat: "<b>Top {0}%</b> of the {1} races in the database ({2} races), from least to most brutal",
-    continuum_hors: "Race <b>outside UTMB categories</b>: <b>top {0}%</b> of the whole database ({1} races), from least to most brutal",
+    continuum_cat: "<b>Top {0}%</b> of the {1} editions in the database ({2} editions), from least to most brutal",
+    continuum_hors: "Race <b>outside UTMB categories</b>: <b>top {0}%</b> of all editions in the database ({1}), from least to most brutal",
     aria_continuum: "Top {0}% of races in the same category; each tick is another race",
+    pied_slogan: "How hard trail and ultra races are, kilometre by kilometre.", pied_projet: "The project", pied_contact: "Contact", pied_legal: "Legal",
+    faq: "FAQ", methode: "Method and sources", code_source: "The project on GitHub", conditions: "Terms and conditions", confidentialite: "Privacy", fermer: "Close",
+    pied_bas: "© 2026 Brutality Index · {0}. UTMB® and Ultra-Trail® are registered trademarks of UTMB Group; Brutality Index is an independent project, not affiliated with UTMB Group or with the organisers of the races listed.",
+    dlg_faq: `<details open><summary>What is the Brutality Index?</summary><p>A score of how hard a race is to live through, from 0 to 1,000 and beyond: the UTMB is worth 700, the 6633 Arctic Ultra (617 km in the Canadian far north) 1,000. Each 150-point step has a grade, from Caress to Butchery; above 1,000 the grade is only revealed to those who actually did it.</p></details>
+<details><summary>What is it for?</summary><p>To compare races of very different formats (a technical 20 km, a high-altitude 100 miles, a backyard), to know what to expect before signing up, and to score your own races: the UTMB index tells your level, the Brutality Index tells what you went through.</p></details>
+<details><summary>How is it computed?</summary><p>The race is split into 100 m sections, run by the edition's median runner at their time. Each section costs duration (night hours count more), mechanical effort (by gradient, more and more expensive with fatigue), technicality (OpenStreetMap terrain, snow, mud, rain), weather (heat, cold, wind at passing time) and altitude. The total is adjusted for drop-outs and self-sufficiency, then put on the scale by a logarithmic law. Each law comes from a published study (see “Method and sources”).</p></details>
+<details><summary>How is it different from the UTMB index?</summary><p>The UTMB index measures a runner's performance. The Brutality Index measures the race: the same runner can perform very well on a gentle race, or finish far back on a brutal one.</p></details>
+<details><summary>How do I get my score?</summary><p>In “My profile”, paste your utmb.world profile: each recognised race gets its score at your time, with the real weather at your passing times. Drop your GPX or FIT to compute it at your real pace, stops included.</p></details>
+<details><summary>What do the categories and “top x%” mean?</summary><p>The category (20K, 50K, 100K, 100M) is the one on the UTMB website. “Top x%” places the edition among all editions of the same category in our database, from least to most brutal; a race without a UTMB category is compared with the whole database.</p></details>
+<details><summary>Is the predictor reliable?</summary><p>For a race in the database it uses the same engine as past editions. For a GPX track it computes everything live, with the simplifications shown. Backyard laps and the chance of finishing rely on provisional rules with no published study: take them as orders of magnitude.</p></details>
+<details><summary>Can the figures change?</summary><p>Yes: this is a working calibration ({0}). Technicality depends on OpenStreetMap quality, which varies by region; every method correction recomputes the whole database.</p></details>`,
+    dlg_methode: `<h3>The computation</h3><p>Scores computed section by section (100 m) for the median runner: duration, mechanical effort, technicality, snow, mud, rain, heat, wind, altitude (weather at passing time), then drop-out rate and level of self-sufficiency. {0}.</p>
+<h3>References</h3><p>Gradient cost: Minetti et al., 2002. Technicality: TSAT scale, speed loss from Jidovtseff &amp; De Cock, 2026. Altitude: Wehrlin &amp; Hallén, 2006. Heat: WBGT, slowdown from Mantzios et al., 2022. Wind: Pugh, 1971; Davies, 1980. Snow: Richmond et al., 2019. Normal pace: Bossi et al., 2017.</p>
+<h3>Data</h3><p>Base map and terrain © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL); ERA5 and ERA5-Land weather from the Copernicus Climate Change Service, via <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0); courses, times and drop-out rates published by race organisers and timing companies; UTMB categories taken from utmb.world.</p>`,
+    dlg_conditions: `<p>Brutality Index is an independent project for information purposes, not affiliated with UTMB Group or with the organisers or timing companies of the races listed. UTMB®, Ultra-Trail® and race names belong to their owners.</p>
+<p>Indexes, grades and predictions are estimates from a model still being calibrated ({0}). They do not replace a race's rules, its organisers' advice or medical advice: do not commit to a race on their basis alone.</p>
+<p>Third-party data stay under their licences: OpenStreetMap (ODbL), Copernicus and Open-Meteo (CC BY 4.0). The site's texts, computations and visuals belong to Brutality Index; you may quote them with a link to this site.</p>`,
+    dlg_confidentialite: `<p>The site has no accounts, no ads and no trackers. What you enter (profile, utmb.world profile, GPX/FIT activities) stays in your browser (local storage) and is never sent to us; “Clear my profile” erases it.</p>
+<p>Exception: for a track or activity outside the database (predictor), its coordinates are sent to OpenStreetMap (Overpass servers) and Open-Meteo to read terrain and weather. Fonts come from Google Fonts.</p>`,
     st_avenir: "Predict an event", st_passe: "Assess a past race", st_backyard: "Backyard laps", st_finir: "Chance of finishing",
     src_base: "A race in the database", src_trace: "A GPX track", psrc_base: "An edition in the database", psrc_act: "My GPX / FIT activity",
     tl_etiquette: "Track outside the database", tl_titre: "Your score on your track", tl_fichier: "GPX track", tl_date: "Start date", tl_heure: "Start time",
@@ -704,8 +771,8 @@ const I18N = {
     moyenne_course_1: "Race index: {0} (single edition)",
     parts_note: "Shares of the score before the dropout factor (×{0}){1}.",
     parts_autonomie: " and the self-sufficiency factor (×{0})",
-    dominante: "Dominant term: the one that weighs most above its median share among races {0}.",
-    dominante_aucune: "No dominant term: each one weighs about as much as in races {0}.",
+    dominante: "Dominant term: the one that weighs most above its median share among editions {0}.",
+    dominante_aucune: "No dominant term: each one weighs about as much as in editions {0}.",
     parmi_cat: "of the {0} category", parmi_base: "of the whole database (race outside UTMB categories)",
     sous_termes: { "De jour": "Daytime", "De nuit": "Night-time", "Montées": "Climbs", "Descentes": "Descents", "Plat": "Flat",
                    "Fatigue": "Accumulated fatigue", "Terrain": "Terrain", "Boue": "Mud", "Pluie": "Rain", "Neige et glace": "Snow and ice",
@@ -920,24 +987,27 @@ function carte(course, ed) {
     (ravitos.length ? `<span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7" transform="rotate(45 6 6)" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> ${t("ravitaillement")}</span>` : "");
 }
 
-// Part de chaque terme dans le score brut ; référence : médiane, sur les courses de la base, des parts de chaque course
-// (termes cumulés de ses 5 dernières éditions passées)
+// Part de chaque terme dans le score brut ; références de catégorie sur TOUTES les éditions passées (1 édition = 1 course,
+// décision de Louis du 01/11)
 const parts = termes => { const s = Object.values(termes).reduce((a, x) => a + Math.max(0, x), 0); return Object.fromEntries(Object.entries(termes).map(([k, v]) => [k, Math.max(0, v) / s])); };
 const mediane = v => { const a = v.slice().sort((x, y) => x - y), m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
 const dernieres = c => c.editions.filter(e => e.edition !== "à venir").slice(-(c.n_editions_course || 5));
 const partsCourse = c => { const s = {}; dernieres(c).forEach(e => Object.entries(e.termes).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; })); return parts(s); };
 const medianeParts = cs => { const p = cs.map(partsCourse); return Object.fromEntries(Object.keys(p[0]).map(k => [k, mediane(p.map(x => x[k]))])); };
-const PARTS_REF = medianeParts(D.courses);
-// Catégorie UTMB (site UTMB, relevé du 01/11) : parts médianes et brutalité de référence des courses de la même
-// catégorie ; course hors catégorie : toute la base, référence = index médian de la base (décision de Louis)
-const REF_CAT = (() => { const g = {}; D.courses.forEach(c => { (g[c.categorie_utmb || ""] = g[c.categorie_utmb || ""] || []).push(c); });
-  const r = { "": { courses: D.courses, parts: PARTS_REF, ref: mediane(D.courses.map(c => c.index_course)) } };
-  for (const [k, cs] of Object.entries(g)) if (k) r[k] = { courses: cs, parts: medianeParts(cs), ref: cs.reduce((a, c) => a + c.index_course, 0) / cs.length };
+const passeesDe = c => c.editions.filter(e => e.edition !== "à venir");
+const medianePartsEd = eds => { const p = eds.map(e => parts(e.termes)); return Object.fromEntries(Object.keys(p[0]).map(k => [k, mediane(p.map(x => x[k]))])); };
+const TOUTES_EDITIONS = D.courses.flatMap(passeesDe);
+const PARTS_REF = medianePartsEd(TOUTES_EDITIONS);
+// Catégorie UTMB (site UTMB, relevé du 01/11) : parts médianes et brutalité moyenne des éditions de la même catégorie ;
+// course hors catégorie : toutes les éditions de la base, référence = index médian (décision de Louis)
+const REF_CAT = (() => { const g = {}; D.courses.forEach(c => { const k = c.categorie_utmb || ""; (g[k] = g[k] || []).push(...passeesDe(c)); });
+  const r = { "": { editions: TOUTES_EDITIONS, parts: PARTS_REF, ref: mediane(TOUTES_EDITIONS.map(e => e.index)) } };
+  for (const [k, eds] of Object.entries(g)) if (k) r[k] = { editions: eds, parts: medianePartsEd(eds), ref: eds.reduce((a, e) => a + e.index, 0) / eds.length };
   return r; })();
 const refCourse = c => REF_CAT[(c && c.categorie_utmb) || ""];
-function continuum(course, idx) {
+function continuum(course, idx, ed) {
   const z = document.getElementById("continuum"); z.textContent = "";
-  const R = refCourse(course), cat = course.categorie_utmb, autres = R.courses.filter(c => c !== course).map(c => c.index_course);
+  const R = refCourse(course), cat = course.categorie_utmb, autres = R.editions.filter(e => e !== ed).map(e => e.index);
   const n = autres.length + 1, rang = 1 + autres.filter(v => v > idx).length, top = Math.max(1, Math.round(100 * rang / n));
   const lo = Math.min(idx, ...autres), hi = Math.max(idx, ...autres), W = 560, H = 46, g = 8;
   const x = v => g + (W - 2 * g) * (v - lo) / Math.max(hi - lo, 1);
@@ -948,8 +1018,8 @@ function continuum(course, idx) {
   el("circle", { cx: x(idx), cy: 18, r: 7, fill: css("--ink"), stroke: css("--surface"), "stroke-width": 2.5 }, svg);
   [[lo, "start"], [hi, "end"]].forEach(([v, a]) => { const tx = el("text", { x: x(v), y: H - 4, "text-anchor": a, "font-size": 11, fill: css("--muted"), "font-family": css("--mono") }, svg); tx.textContent = fmt(v); });
   const txt = document.createElement("p");
-  txt.innerHTML = cat ? t("continuum_cat", top, `<span class="cat" style="background:var(--cat-${cat.toLowerCase()})">${cat}</span>`, R.courses.length)
-                      : t("continuum_hors", top, R.courses.length);
+  txt.innerHTML = cat ? t("continuum_cat", top, `<span class="cat" style="background:var(--cat-${cat.toLowerCase()})">${cat}</span>`, R.editions.length)
+                      : t("continuum_hors", top, R.editions.length);
   z.appendChild(txt);
 }
 const SEUIL_DOMINANTE = 1.15;   // un terme domine s'il pèse plus de 15 % au-dessus de sa part médiane
@@ -1039,7 +1109,7 @@ function afficherCourse(course, ed) {
   document.getElementById("c-temps").textContent = hhmm(ed.temps_h);
   document.getElementById("c-dnf").textContent = fmt(ed.dnf_pct, 1) + " %";
   document.getElementById("c-nuit").textContent = fmt(ed.nuit_pct) + " %";
-  echelle(ed.index); continuum(course, ed.index); carte(course, ed); decomposition(ed, course);
+  echelle(ed.index); continuum(course, ed.index, ed); carte(course, ed); decomposition(ed, course);
   // Index de la course : moyenne des index de ses 5 dernières éditions passées (calculé dans exportAppli.py)
   const n = course.n_editions_course, total = course.editions.filter(e => e.edition !== "à venir").length, moy = document.getElementById("moyenne-course");
   moy.hidden = !!vueCoureur || !n;
@@ -1076,7 +1146,13 @@ q.addEventListener("keydown", ev => {
 });
 document.addEventListener("click", ev => { if (!ev.target.closest(".recherche")) fermer(); });
 
-function piedDePage() { document.getElementById("pied").innerHTML = t("pied1", t("version")) + "<br>" + t("pied2"); }
+function piedDePage() { document.getElementById("pied-bas").innerHTML = t("pied_bas", t("version")); }
+const dialogue = document.getElementById("dialogue");
+document.querySelectorAll("[data-dialogue]").forEach(b => b.addEventListener("click", () => {
+  const n = b.dataset.dialogue; document.getElementById("dialogue-corps").innerHTML = `<h2 id="dialogue-titre">${t(n)}</h2>` + t("dlg_" + n, t("version"));
+  dialogue.showModal(); }));
+document.getElementById("dialogue-fermer").addEventListener("click", () => dialogue.close());
+dialogue.addEventListener("click", ev => { if (ev.target === dialogue) dialogue.close(); });
 piedDePage();
 
 /* ---------- Moteur du score (port de Code/scoreParcours.py, course à venir) ---------- */

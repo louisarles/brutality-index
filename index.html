@@ -130,6 +130,11 @@ h2 { font: 400 1.55rem/1.1 var(--display); letter-spacing: 0.01em; text-transfor
 .onglets button { font: 600 0.95rem var(--body); color: var(--muted); background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px 9px; cursor: pointer; }
 .onglets button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 .onglets button:hover { color: var(--ink); }
+.sous-onglets, .choix-source { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 16px; }
+.sous-onglets button, .choix-source button { font: 600 0.8rem var(--body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.sous-onglets button[aria-selected="true"], .choix-source button[aria-pressed="true"] { color: var(--surface); background: var(--ink); border-color: var(--ink); }
+.sous-onglets button:hover, .choix-source button:hover { border-color: var(--ink); }
+.proba { font: 400 clamp(3.6rem, 9vw, 5.4rem)/0.9 var(--display); margin-top: 12px; }
 .vide { max-width: 62ch; }
 .vide p { color: var(--muted); }
 .formulaire { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 18px; margin-top: 14px; }
@@ -279,6 +284,19 @@ footer a { color: inherit; }
   </div>
 
   <div id="predicteur" role="tabpanel" aria-labelledby="tab-predicteur" hidden>
+    <nav class="sous-onglets" role="tablist" aria-label="Prédicteur">
+      <button type="button" role="tab" id="st-avenir" aria-controls="sp-avenir" aria-selected="true" data-i18n="st_avenir">Prédire un événement</button>
+      <button type="button" role="tab" id="st-passe" aria-controls="sp-passe" aria-selected="false" data-i18n="st_passe">Évaluer une course passée</button>
+      <button type="button" role="tab" id="st-backyard" aria-controls="sp-backyard" aria-selected="false" data-i18n="st_backyard">Tours de backyard</button>
+      <button type="button" role="tab" id="st-finir" aria-controls="sp-finir" aria-selected="false" data-i18n="st_finir">Probabilité de finir</button>
+    </nav>
+
+    <div id="sp-avenir" role="tabpanel" aria-labelledby="st-avenir">
+      <div class="choix-source" role="group" aria-label="Source">
+        <button type="button" id="src-base" aria-pressed="true" data-i18n="src_base">Une course de la base</button>
+        <button type="button" id="src-trace" aria-pressed="false" data-i18n="src_trace">Un tracé GPX</button>
+      </div>
+      <div id="av-base">
     <div class="grille">
       <section class="bloc" aria-labelledby="titre-pred">
         <p class="etiquette" data-i18n="pred_etiquette">Prédicteur · prochaine édition</p>
@@ -330,6 +348,91 @@ footer a { color: inherit; }
         <dt data-i18n="g_meteo">Météo</dt><dd data-i18n="gd_meteo">La chaleur, le froid et le vent, à l'heure où l'on passe à chaque endroit.</dd>
         <dt data-i18n="g_altitude">Altitude</dt><dd data-i18n="gd_altitude">Le manque d'oxygène, qui ralentit dès les premières centaines de mètres.</dd>
       </dl>
+      </section>
+    </div>
+      </div>
+      <div id="av-trace" hidden>
+        <div class="grille">
+          <section class="bloc" aria-labelledby="titre-tl">
+            <p class="etiquette" data-i18n="tl_etiquette">Tracé hors base</p>
+            <h2 id="titre-tl" data-i18n="tl_titre">Votre cote sur votre tracé</h2>
+            <div class="formulaire">
+              <div class="champ"><label for="tl-fichier" data-i18n="tl_fichier">Tracé GPX</label><input id="tl-fichier" type="file" accept=".gpx"></div>
+              <div class="champ"><label for="tl-date" data-i18n="tl_date">Date de départ</label><input id="tl-date" type="date"></div>
+              <div class="champ"><label for="tl-heure" data-i18n="tl_heure">Heure de départ</label><input id="tl-heure" type="time" value="08:00"></div>
+              <div class="champ"><label for="tl-h" data-i18n="tl_temps">Temps visé (h)</label><input id="tl-h" type="number" min="0.5" max="400" step="0.25" value="10"></div>
+              <div class="champ"><label for="tl-dnf" data-i18n="tl_dnf">Abandons attendus (%)</label><input id="tl-dnf" type="number" min="0" max="90" step="1" value="0"></div>
+              <div class="champ"><label for="tl-auto" data-i18n="tl_auto">Format</label><select id="tl-auto"><option value="0" data-i18n="ravitaille">Ravitaillé</option><option value="1" data-i18n="autonomie">Autonomie</option></select></div>
+            </div>
+            <p style="margin-top:14px"><button type="button" class="bouton" id="tl-calculer" data-i18n="calculer">Calculer</button></p>
+            <p class="aide" id="tl-etat"></p><p class="erreur" id="tl-erreur"></p>
+            <div id="tl-resultat"></div>
+            <p class="aide" data-i18n="tl_methode">Même méthode que la base, en direct : technicité OpenStreetMap, météo ERA5 (Open-Meteo) de la date si elle est passée, sinon médiane des 5 dernières années à la même date. Simplifications : WBGT à l'ombre (approximation du Bureau of Meteorology australien), ni boue ni glaciers.</p>
+          </section>
+          <section class="bloc"><p class="etiquette" data-i18n="decomposition">Décomposition</p><h2 data-i18n="ce_qui_fait_vous">Ce qui fait votre brutalité</h2><div class="termes" id="tl-termes"></div></section>
+        </div>
+      </div>
+      <p class="aide" data-i18n="index_bientot">Prédire votre temps depuis votre index UTMB : à venir (il faut les temps de coureurs du même index sur chaque course).</p>
+    </div>
+
+    <div id="sp-passe" role="tabpanel" aria-labelledby="st-passe" hidden>
+      <div class="choix-source" role="group" aria-label="Source">
+        <button type="button" id="psrc-base" aria-pressed="true" data-i18n="psrc_base">Une édition de la base</button>
+        <button type="button" id="psrc-act" aria-pressed="false" data-i18n="psrc_act">Mon activité GPX / FIT</button>
+      </div>
+      <div class="grille">
+        <section class="bloc">
+          <p class="etiquette" data-i18n="pa_etiquette">Course passée</p>
+          <h2 data-i18n="pa_titre">Et si j'avais mis…</h2>
+          <div class="formulaire" id="pa-base">
+            <div class="champ"><label for="pa-course" data-i18n="course">Course</label><select id="pa-course"></select></div>
+            <div class="champ"><label for="pa-edition" data-i18n="th_edition">Édition</label><select id="pa-edition"></select></div>
+            <div class="champ"><label for="pa-h" data-i18n="tl_temps">Temps (h)</label><input id="pa-h" type="number" min="0.5" max="400" step="0.25"></div>
+          </div>
+          <div class="formulaire" id="pa-act" hidden>
+            <div class="champ"><label for="pa-fichier" data-i18n="pa_fichier">Activité (GPX ou FIT, avec les temps)</label><input id="pa-fichier" type="file" accept=".gpx,.fit"></div>
+            <div class="champ"><label for="pa-dnf" data-i18n="tl_dnf">Abandons (%)</label><input id="pa-dnf" type="number" min="0" max="90" step="1" value="0"></div>
+            <div class="champ"><label for="pa-auto" data-i18n="tl_auto">Format</label><select id="pa-auto"><option value="0" data-i18n="ravitaille">Ravitaillé</option><option value="1" data-i18n="autonomie">Autonomie</option></select></div>
+          </div>
+          <p style="margin-top:14px"><button type="button" class="bouton" id="pa-calculer" data-i18n="calculer">Calculer</button></p>
+          <p class="aide" id="pa-etat"></p><p class="erreur" id="pa-erreur"></p>
+          <div id="pa-resultat"></div>
+        </section>
+        <section class="bloc"><p class="etiquette" data-i18n="decomposition">Décomposition</p><h2 data-i18n="ce_qui_fait_vous">Ce qui fait votre brutalité</h2><div class="termes" id="pa-termes"></div></section>
+      </div>
+    </div>
+
+    <div id="sp-backyard" role="tabpanel" aria-labelledby="st-backyard" hidden>
+      <div class="grille">
+        <section class="bloc">
+          <p class="etiquette" data-i18n="by_etiquette">Backyard · règle provisoire</p>
+          <h2 data-i18n="by_titre">Combien de tours pourriez-vous encaisser ?</h2>
+          <div class="formulaire">
+            <div class="champ"><label for="by-record" data-i18n="by_record">Votre cote record</label><input id="by-record" type="number" min="50" max="2000" step="1"></div>
+            <div class="champ"><label for="by-dplus" data-i18n="by_dplus">D+ par boucle (m)</label><input id="by-dplus" type="number" min="0" max="800" step="10" value="60"></div>
+            <div class="champ"><label for="by-terrain" data-i18n="by_terrain">Terrain</label><select id="by-terrain"><option value="0" data-i18n="by_route">Route</option><option value="1" data-i18n="by_chemin">Chemin</option><option value="2" selected data-i18n="by_sentier">Sentier facile</option><option value="5" data-i18n="by_montagne">Sentier de montagne</option></select></div>
+            <div class="champ"><label for="by-date" data-i18n="tl_date">Date de départ</label><input id="by-date" type="date"></div>
+            <div class="champ"><label for="by-heure" data-i18n="tl_heure">Heure de départ</label><input id="by-heure" type="time" value="09:00"></div>
+          </div>
+          <p style="margin-top:14px"><button type="button" class="bouton" id="by-calculer" data-i18n="calculer">Calculer</button></p>
+          <p class="erreur" id="by-erreur"></p>
+          <div id="by-resultat"></div>
+          <p class="aide" data-i18n="by_methode">Règle provisoire, à nous : vous tenez jusqu'au tour où la brutalité de la backyard dépasse votre cote record (la plus forte que vous ayez encaissée). Boucle de 6,706 km, une heure en mouvement par tour, sans facteur d'abandons (§ 2.18), météo neutre.</p>
+        </section>
+        <section class="bloc"><p class="etiquette" data-i18n="by_courbe_et">Brutalité selon les tours</p><h2 data-i18n="by_courbe_titre">Chaque tour coûte plus cher</h2><div class="termes" id="by-paliers"></div></section>
+      </div>
+    </div>
+
+    <div id="sp-finir" role="tabpanel" aria-labelledby="st-finir" hidden>
+      <section class="bloc">
+        <p class="etiquette" data-i18n="fi_etiquette">Probabilité de finir · règle provisoire</p>
+        <h2 data-i18n="fi_titre">Vos chances d'arriver au bout</h2>
+        <div class="formulaire">
+          <div class="champ"><label for="fi-course" data-i18n="course">Course</label><select id="fi-course"></select></div>
+          <div class="champ"><label for="fi-record" data-i18n="by_record">Votre cote record</label><input id="fi-record" type="number" min="50" max="2000" step="1"></div>
+        </div>
+        <div id="fi-resultat"></div>
+        <p class="aide" data-i18n="fi_methode">Règle provisoire, à nous (aucune étude publiée) : on part du taux d'arrivée médian de la course, puis chaque tranche de 40 points entre votre cote record et l'index de la course multiplie (ou divise) vos chances par e ≈ 2,7. À valider sur des données d'arrivées.</p>
       </section>
     </div>
   </div>
@@ -466,6 +569,25 @@ const I18N = {
     continuum_cat: "<b>Top {0} %</b> des courses {1} de la base ({2} courses), de la moins à la plus brutale",
     continuum_hors: "Course <b>hors catégorie UTMB</b> : <b>top {0} %</b> de toute la base ({1} courses), de la moins à la plus brutale",
     aria_continuum: "Top {0} % des courses de la même catégorie ; chaque trait est une autre course",
+    st_avenir: "Prédire un événement", st_passe: "Évaluer une course passée", st_backyard: "Tours de backyard", st_finir: "Probabilité de finir",
+    src_base: "Une course de la base", src_trace: "Un tracé GPX", psrc_base: "Une édition de la base", psrc_act: "Mon activité GPX / FIT",
+    tl_etiquette: "Tracé hors base", tl_titre: "Votre cote sur votre tracé", tl_fichier: "Tracé GPX", tl_date: "Date de départ", tl_heure: "Heure de départ",
+    tl_temps: "Temps visé (h)", tl_dnf: "Abandons attendus (%)", tl_auto: "Format", ravitaille: "Ravitaillé", autonomie: "Autonomie", calculer: "Calculer",
+    tl_methode: "Même méthode que la base, en direct : technicité OpenStreetMap, météo ERA5 (Open-Meteo) de la date si elle est passée, sinon médiane des 5 dernières années à la même date. Simplifications : WBGT à l'ombre (approximation du Bureau of Meteorology australien), ni boue ni glaciers.",
+    index_bientot: "Prédire votre temps depuis votre index UTMB : à venir (il faut les temps de coureurs du même index sur chaque course).",
+    etape_trace: "Lecture du tracé…", etape_altitude: "Altitudes (Open-Meteo)…", etape_osm: "Technicité (OpenStreetMap)…", etape_meteo: "Météo (Open-Meteo)…",
+    osm_indispo: "⚠️ OpenStreetMap injoignable : technicité par défaut (sentier facile, T2) ; réessayez plus tard.",
+    tl_ok: "{0} km · {1} m D+ · technicité OSM sur {2} % du tracé · {3} % de nuit", tl_vide: "Choisissez d'abord un fichier.", tl_lecture: "Tracé illisible ({0}).",
+    pa_etiquette: "Course passée", pa_titre: "Et si j'avais mis…", pa_fichier: "Activité (GPX ou FIT, avec les temps)",
+    pa_base_ok: "{0} {1} en {2}, avec la météo réelle de l'édition à vos heures de passage.", pa_act_ok: "{0} km en {1}, départ le {2} : météo réelle de ce jour-là.",
+    by_etiquette: "Backyard · règle provisoire", by_titre: "Combien de tours pourriez-vous encaisser ?", by_record: "Votre cote record", by_dplus: "D+ par boucle (m)",
+    by_terrain: "Terrain", by_route: "Route", by_chemin: "Chemin", by_sentier: "Sentier facile", by_montagne: "Sentier de montagne",
+    by_methode: "Règle provisoire, à nous : vous tenez jusqu'au tour où la brutalité de la backyard dépasse votre cote record (la plus forte que vous ayez encaissée). Boucle de 6,706 km, une heure en mouvement par tour, sans facteur d'abandons (§ 2.18), météo neutre.",
+    by_courbe_et: "Brutalité selon les tours", by_courbe_titre: "Chaque tour coûte plus cher", by_tours: "{0} tours", by_resultat: "≈ {0} tours ({1} km)",
+    by_sans_record: "Indiquez votre cote record (elle se remplit seule si votre fiche UTMB est importée dans Mon profil).",
+    fi_etiquette: "Probabilité de finir · règle provisoire", fi_titre: "Vos chances d'arriver au bout",
+    fi_methode: "Règle provisoire, à nous (aucune étude publiée) : on part du taux d'arrivée médian de la course, puis chaque tranche de 40 points entre votre cote record et l'index de la course multiplie (ou divise) vos chances par e ≈ 2,7. À valider sur des données d'arrivées.",
+    fi_resultat: "Index de la course {0} · taux d'arrivée médian {1} % · votre cote record {2}",
     aide_sous_termes: "Cliquez sur un terme pour voir ce qui le compose.",
     tri_aide: "Cliquez sur un titre de colonne pour trier (1 clic : décroissant, 2 clics : croissant).",
     moyenne_course_1: "Index de la course : {0} (une seule édition)",
@@ -558,6 +680,25 @@ const I18N = {
     continuum_cat: "<b>Top {0}%</b> of the {1} races in the database ({2} races), from least to most brutal",
     continuum_hors: "Race <b>outside UTMB categories</b>: <b>top {0}%</b> of the whole database ({1} races), from least to most brutal",
     aria_continuum: "Top {0}% of races in the same category; each tick is another race",
+    st_avenir: "Predict an event", st_passe: "Assess a past race", st_backyard: "Backyard laps", st_finir: "Chance of finishing",
+    src_base: "A race in the database", src_trace: "A GPX track", psrc_base: "An edition in the database", psrc_act: "My GPX / FIT activity",
+    tl_etiquette: "Track outside the database", tl_titre: "Your score on your track", tl_fichier: "GPX track", tl_date: "Start date", tl_heure: "Start time",
+    tl_temps: "Target time (h)", tl_dnf: "Expected dropouts (%)", tl_auto: "Format", ravitaille: "Supported", autonomie: "Self-supported", calculer: "Compute",
+    tl_methode: "Same method as the database, live: OpenStreetMap technicality, ERA5 weather (Open-Meteo) for the date if it is past, otherwise the median of the last 5 years on the same date. Simplifications: shade WBGT (Australian Bureau of Meteorology approximation), no mud and no glaciers.",
+    index_bientot: "Predicting your time from your UTMB index: coming (it needs the times of runners with the same index on each race).",
+    etape_trace: "Reading the track…", etape_altitude: "Elevations (Open-Meteo)…", etape_osm: "Technicality (OpenStreetMap)…", etape_meteo: "Weather (Open-Meteo)…",
+    osm_indispo: "⚠️ OpenStreetMap unreachable: default technicality (easy trail, T2); try again later.",
+    tl_ok: "{0} km · {1} m elev. gain · OSM technicality on {2}% of the track · {3}% at night", tl_vide: "Choose a file first.", tl_lecture: "Unreadable track ({0}).",
+    pa_etiquette: "Past race", pa_titre: "What if I had run…", pa_fichier: "Activity (GPX or FIT, with times)",
+    pa_base_ok: "{0} {1} in {2}, with the edition's real weather at your passing times.", pa_act_ok: "{0} km in {1}, started on {2}: real weather of that day.",
+    by_etiquette: "Backyard · provisional rule", by_titre: "How many laps could you take?", by_record: "Your record score", by_dplus: "Elev. gain per loop (m)",
+    by_terrain: "Terrain", by_route: "Road", by_chemin: "Dirt road", by_sentier: "Easy trail", by_montagne: "Mountain trail",
+    by_methode: "Provisional rule of ours: you last until the lap where the backyard's brutality exceeds your record score (the highest you have taken). 6.706 km loop, one hour moving per lap, no dropout factor (§ 2.18), neutral weather.",
+    by_courbe_et: "Brutality by laps", by_courbe_titre: "Each lap costs more", by_tours: "{0} laps", by_resultat: "≈ {0} laps ({1} km)",
+    by_sans_record: "Enter your record score (filled in automatically once your UTMB profile is imported in My profile).",
+    fi_etiquette: "Chance of finishing · provisional rule", fi_titre: "Your chances of reaching the finish",
+    fi_methode: "Provisional rule of ours (no published study): we start from the race's median finishing rate, then each 40 points between your record score and the race index multiply (or divide) your odds by e ≈ 2.7. To be validated on finishing data.",
+    fi_resultat: "Race index {0} · median finishing rate {1}% · your record score {2}",
     aide_sous_termes: "Click a term to see what it is made of.",
     tri_aide: "Click a column title to sort (1 click: descending, 2 clicks: ascending).",
     moyenne_course_1: "Race index: {0} (single edition)",
@@ -1173,6 +1314,130 @@ pCourse.addEventListener("change", () => {
   pCurseur.value = Math.round((T - a) / (b - a) * 1000); predire(T);
 });
 
+
+/* ---------- Prédicteur : sous-onglets (01/11) ---------- */
+const SOUS = ["avenir", "passe", "backyard", "finir"];
+function ouvrirSous(nom) {
+  SOUS.forEach(o => { document.getElementById("sp-" + o).hidden = o !== nom; document.getElementById("st-" + o).setAttribute("aria-selected", o === nom ? "true" : "false"); });
+  if (nom === "backyard" || nom === "finir") { const r = coteRecord(); ["by-record", "fi-record"].forEach(id => { const e = document.getElementById(id); if (r && !e.value) e.value = Math.round(r); }); }
+  if (nom === "finir") probaFinir();
+  if (nom === "passe" && !paCourse.options.length) remplirPasse();
+}
+SOUS.forEach(o => document.getElementById("st-" + o).addEventListener("click", () => ouvrirSous(o)));
+const basculeSource = (a, b, zoneA, zoneB) => [[a, true], [b, false]].forEach(([id, premier]) => document.getElementById(id).addEventListener("click", () => {
+  document.getElementById(a).setAttribute("aria-pressed", premier ? "true" : "false"); document.getElementById(b).setAttribute("aria-pressed", premier ? "false" : "true");
+  document.getElementById(zoneA).hidden = !premier; document.getElementById(zoneB).hidden = premier; }));
+basculeSource("src-base", "src-trace", "av-base", "av-trace");
+basculeSource("psrc-base", "psrc-act", "pa-base", "pa-act");
+// Cote record du coureur : la plus forte cote de sa fiche (cotes calculées à la demande, onglet Mon profil)
+function coteRecord() { const f = profilLu().ficheUtmb; if (!f) return null; const c = f.resultats.map(coteCourse).filter(x => x != null); return c.length ? Math.max(...c) : null; }
+// Résultat : index, grade (caché au-delà de 1000 : ce n'est qu'une prévision), vignette, puis décomposition
+function rendreScore(zone, zoneTermes, r, ligne) {
+  const idx = Math.round(r.index), i = rangGrade(idx), cache = i === D.grades.length - 1;
+  zone.innerHTML = `<div class="cote"><div class="vignette" aria-hidden="true">${vignetteGrade(i, cache)}</div><div class="index">${fmt(idx)}</div>` +
+    `<div><div class="grade${cache ? " cache" : ""}" style="background:${cache ? "var(--bi-tuile)" : couleurGrade(i)};color:${cache ? "var(--bi-os)" : encreGrade(i)}">${esc(nomGrade(idx, LANGUE))}</div></div></div>` +
+    (ligne ? `<p class="aide">${ligne}</p>` : "");
+  zoneTermes.textContent = ""; const max = Math.max(...Object.values(r.termes)), p = parts(r.termes);
+  for (const [nom, v] of Object.entries(r.termes)) { const li = document.createElement("div"); li.className = "terme";
+    li.innerHTML = `<span class="nom">${nomTerme(nom)}</span><span class="barre"><i style="width:${Math.max(0, v) / max * 100}%"></i></span><span class="val">${fmt(v)}</span><span class="part">${fmt(100 * p[nom])} %</span><span></span>`; zoneTermes.appendChild(li); }
+}
+const msDepart = (date, heure) => { const d = date || new Date().toISOString().slice(0, 10); return new Date(`${d}T${heure || "08:00"}`).getTime(); };
+// Tracé GPX d'itinéraire (sans temps) : points de trace ou de route, altitude si présente
+function lireTraceGpx(texte) {
+  const doc = new DOMParser().parseFromString(texte, "application/xml"); if (doc.querySelector("parsererror")) throw new Error("gpx");
+  let pts = [...doc.getElementsByTagNameNS("*", "trkpt")]; if (pts.length < 2) pts = [...doc.getElementsByTagNameNS("*", "rtept")];
+  return pts.map(p => { const e = [...p.getElementsByTagNameNS("*", "ele")][0]; return { lat: +p.getAttribute("lat"), lon: +p.getAttribute("lon"), alt: e ? +e.textContent : null }; })
+            .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+}
+
+/* Sous-onglet « à venir », tracé GPX : préparation (OSM, météo) une fois, puis le temps visé se change sans recharger */
+let traceAvenir = null;
+const tlEtat = document.getElementById("tl-etat"), tlErreur = document.getElementById("tl-erreur");
+function scoreTraceAvenir() {
+  if (!traceAvenir) return;
+  const T = Math.max(0.5, +document.getElementById("tl-h").value || 1), r = scoreTraceLibre(traceAvenir.t, traceAvenir.terrain, traceAvenir.meteo, traceAvenir.depart, T,
+    +document.getElementById("tl-dnf").value || 0, document.getElementById("tl-auto").value === "1");
+  rendreScore(document.getElementById("tl-resultat"), document.getElementById("tl-termes"), r,
+    t("tl_ok", fmt(traceAvenir.distance_km, 1), fmt(Math.round(traceAvenir.dplus_m / 10) * 10), Math.round(100 * traceAvenir.terrain.part_osm), fmt(r.nuit_pct)) + (traceAvenir.terrain.indisponible ? " " + t("osm_indispo") : ""));
+}
+document.getElementById("tl-calculer").addEventListener("click", async () => {
+  tlErreur.textContent = ""; const f = document.getElementById("tl-fichier").files[0];
+  if (!f) { tlErreur.textContent = t("tl_vide"); return; }
+  const bouton = document.getElementById("tl-calculer"); bouton.disabled = true;
+  try {
+    const pts = lireTraceGpx(await f.text()); if (pts.length < 10) throw new Error("vide");
+    const depart = msDepart(document.getElementById("tl-date").value, document.getElementById("tl-heure").value), T = +document.getElementById("tl-h").value || 10;
+    traceAvenir = { ...(await preparerTraceLibre(pts, depart, Math.max(T, 1) * 1.6, e => { tlEtat.textContent = t("etape_" + e); })), depart };
+    tlEtat.textContent = ""; scoreTraceAvenir();
+  } catch (e) { tlEtat.textContent = ""; tlErreur.textContent = t("tl_lecture", String(e && e.message || e)); }
+  bouton.disabled = false;
+});
+["tl-h", "tl-dnf", "tl-auto"].forEach(id => document.getElementById(id).addEventListener("change", scoreTraceAvenir));
+
+/* Sous-onglet « course passée » : une édition de la base à un autre temps (météo réelle), ou une activité hors base */
+const paCourse = document.getElementById("pa-course"), paEdition = document.getElementById("pa-edition"), paH = document.getElementById("pa-h");
+function remplirPasse() {
+  D.courses.forEach(c => { const o = document.createElement("option"); o.value = c.id; o.textContent = c.nom.split(" — ")[0]; paCourse.appendChild(o); });
+  paCourse.dispatchEvent(new Event("change"));
+}
+paCourse.addEventListener("change", () => {
+  const c = D.courses.find(x => x.id === paCourse.value); paEdition.textContent = "";
+  c.editions.filter(e => e.edition !== "à venir").slice().reverse().forEach(e => { const o = document.createElement("option"); o.value = e.edition; o.textContent = e.edition; paEdition.appendChild(o); });
+  paEdition.dispatchEvent(new Event("change"));
+});
+paEdition.addEventListener("change", () => { const c = D.courses.find(x => x.id === paCourse.value), e = c.editions.find(x => x.edition === paEdition.value); paH.value = e.temps_h.toFixed(2); });
+document.getElementById("pa-calculer").addEventListener("click", async () => {
+  const etat = document.getElementById("pa-etat"), err = document.getElementById("pa-erreur"); err.textContent = "";
+  const bouton = document.getElementById("pa-calculer"); bouton.disabled = true;
+  try {
+    if (document.getElementById("psrc-base").getAttribute("aria-pressed") === "true") {
+      const c = D.courses.find(x => x.id === paCourse.value), e = c.editions.find(x => x.edition === paEdition.value), T = Math.max(0.5, +paH.value || e.temps_h);
+      etat.textContent = t("etape_meteo"); const r = scoreEdition(c, e, await donneesEdition(c, e), T); etat.textContent = "";
+      rendreScore(document.getElementById("pa-resultat"), document.getElementById("pa-termes"), r, t("pa_base_ok", esc(c.nom.split(" — ")[0]), e.edition, hhmm(T)));
+    } else {
+      const f = document.getElementById("pa-fichier").files[0]; if (!f) throw new Error(t("tl_vide"));
+      const pts = await lireActivite(f); if (pts.length < 10) throw new Error("vide");
+      const depart = pts[0].t, T = (pts[pts.length - 1].t - depart) / 3600000;
+      const prep = await preparerTraceLibre(pts, depart, T, e => { etat.textContent = t("etape_" + e); }); etat.textContent = "";
+      const r = scoreTraceLibre(prep.t, prep.terrain, prep.meteo, depart, T, +document.getElementById("pa-dnf").value || 0, document.getElementById("pa-auto").value === "1");
+      rendreScore(document.getElementById("pa-resultat"), document.getElementById("pa-termes"), r,
+        t("pa_act_ok", fmt(prep.distance_km, 1), hhmm(T), new Date(depart).toLocaleDateString(LANGUE === "en" ? "en-GB" : "fr-FR")) + (prep.terrain.indisponible ? " " + t("osm_indispo") : ""));
+    }
+  } catch (e) { etat.textContent = ""; err.textContent = t("tl_lecture", String(e && e.message || e)); }
+  bouton.disabled = false;
+});
+
+/* Sous-onglet backyard : brutalité d'une backyard de n tours ; tours tenus = dernier tour sous la cote record */
+function indexBackyard(n, dplus, niveau, depart) {
+  const tr = backyardTroncons(n, dplus, 46.5, 2.5), terrain = { tech: tr.dd.map(() => niveau), osm_absent: tr.dd.map(() => 0) };
+  return scoreTraceLibre(tr, terrain, null, depart, n, 0, false).index;
+}
+document.getElementById("by-calculer").addEventListener("click", () => {
+  const err = document.getElementById("by-erreur"), rec = +document.getElementById("by-record").value; err.textContent = "";
+  if (!(rec > 0)) { err.textContent = t("by_sans_record"); return; }
+  const dplus = +document.getElementById("by-dplus").value || 0, niveau = +document.getElementById("by-terrain").value,
+        depart = msDepart(document.getElementById("by-date").value, document.getElementById("by-heure").value);
+  let lo = 0, hi = 1; while (hi < 400 && indexBackyard(hi, dplus, niveau, depart) <= rec) { lo = hi; hi *= 2; }
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (indexBackyard(m, dplus, niveau, depart) <= rec) lo = m; else hi = m; }
+  document.getElementById("by-resultat").innerHTML = `<p class="proba">${t("by_resultat", lo, fmt(lo * BOUCLE_KM))}</p>`;
+  const z = document.getElementById("by-paliers"); z.textContent = "";
+  const paliers = [6, 12, 24, 36, 48, 72, 100, 150].map(k => [k, indexBackyard(k, dplus, niveau, depart)]), max = Math.max(...paliers.map(x => x[1]));
+  paliers.forEach(([k, v]) => { const li = document.createElement("div"), i = rangGrade(Math.round(v)); li.className = "terme" + (k <= lo ? "" : " sous-termes");
+    li.innerHTML = `<span class="nom">${t("by_tours", k)}</span><span class="barre"><i style="width:${v / max * 100}%;background:${couleurGrade(i)}"></i></span><span class="val">${fmt(v)}</span><span class="part">${esc(nomGrade(Math.round(v), LANGUE))}</span><span></span>`; z.appendChild(li); });
+});
+
+/* Sous-onglet probabilité de finir : règle provisoire (logit du taux d'arrivée + écart cote record − index / 40) */
+const ECHELLE_PROBA = 40;
+const fiCourse = document.getElementById("fi-course");
+D.courses.forEach(c => { const o = document.createElement("option"); o.value = c.id; o.textContent = c.nom.split(" — ")[0]; fiCourse.appendChild(o); });
+function probaFinir() {
+  const c = D.courses.find(x => x.id === fiCourse.value), rec = +document.getElementById("fi-record").value, z = document.getElementById("fi-resultat");
+  if (!c) return; if (!(rec > 0)) { z.innerHTML = `<p class="aide">${t("by_sans_record")}</p>`; return; }
+  const arrivee = Math.min(0.99, Math.max(0.01, 1 - c.moteur.dnf_median_pct / 100)), x = Math.log(arrivee / (1 - arrivee)) + (rec - c.index_course) / ECHELLE_PROBA, pr = 1 / (1 + Math.exp(-x));
+  z.innerHTML = `<p class="proba">${fmt(100 * pr)} %</p><p class="aide">${t("fi_resultat", fmt(c.index_course), fmt(100 * arrivee), fmt(rec))}</p>`;
+}
+fiCourse.addEventListener("change", probaFinir); document.getElementById("fi-record").addEventListener("input", probaFinir);
+
 /* ---------- Profil (stocké dans ce navigateur uniquement) ---------- */
 const CHAMPS = { sexe: "pr-sexe", fcRepos: "pr-fcrepos", fcMax: "pr-fcmax", utmb: "pr-utmb" };
 function profilLu() { try { return JSON.parse(localStorage.getItem("brutality-profil") || "{}"); } catch (e) { return {}; } }
@@ -1530,6 +1795,240 @@ function facteurIntensite(inter, fcRepos, fcMax, sexe) {
   if (!duree || avecFc < 0.5 * mouv) return null;   // moins de la moitié du temps en mouvement avec une FC
   const h = duree / 3600, ref = (92.6 - 5.9 * Math.log(h)) / 100 * fcMax;
   return { facteur: s / (poids((ref - fcRepos) / (fcMax - fcRepos)) * duree), fc_moy: sommeFc / duree, fc_ref: ref };
+}
+
+/* Moteur « tracé libre » : un tracé GPX hors base (événement à venir, sortie passée, backyard synthétique) scoré dans le
+   navigateur avec la méthode de la base (Code/scoreParcours.py) : tronçons de 100 m, altitude lissée (~500 m), coût de
+   pente (Minetti), fatigue, technicité OpenStreetMap en direct (Overpass ; échelle de Louis du 01/11, règle du voisinage,
+   comblement des trous), météo ERA5 en direct (Open-Meteo : l'année de la date si elle est passée, sinon médiane des 5
+   dernières années à la même date et heure), altitude (Wehrlin & Hallén), nuit, vent (Pugh). Simplifications, signalées
+   dans l'appli : WBGT à l'ombre du Bureau of Meteorology australien au lieu de Liljegren ; ni boue ni glaciers.
+   Inséré dans la page par construireAppli.py (repère TRACE_LIBRE). */
+
+/* ---------- Tracé : tronçons de 100 m ---------- */
+const PAS_TRONCON_KM = 0.1, LISSAGE_POINTS = 5, SEUIL_ALTITUDE_M = 300, PERTE_ALTITUDE_M = 0.063 / 1000;
+function coutPente(i) { const e = Cr(Math.max(-0.45, Math.min(0.45, i))) / Cr(0); return i < 0 ? (e + 1) / 2 : e; }   // cout_pente
+function capDeg(la1, lo1, la2, lo2) {
+  const p1 = la1 * Math.PI / 180, p2 = la2 * Math.PI / 180, dl = (lo2 - lo1) * Math.PI / 180;
+  return (Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) * 180 / Math.PI + 360) % 360;
+}
+// points [{lat, lon, alt}] -> nœuds tous les 100 m (lat, lon, altitude interpolées) ; altitudes manquantes : null
+function noeudsTous100m(points) {
+  const cum = [0]; for (let k = 1; k < points.length; k++) cum.push(cum[k - 1] + distanceM(points[k - 1], points[k]) / 1000);
+  const total = cum[cum.length - 1], n = Math.max(2, Math.round(total / PAS_TRONCON_KM) + 1), lat = [], lon = [], alt = [], d = [];
+  let k = 0;
+  for (let q = 0; q < n; q++) {
+    const s = total * q / (n - 1); while (k + 1 < cum.length - 1 && cum[k + 1] < s) k++;
+    const a = cum[k + 1] > cum[k] ? (s - cum[k]) / (cum[k + 1] - cum[k]) : 0, p0 = points[k], p1 = points[k + 1] || p0;
+    d.push(s); lat.push(p0.lat + a * (p1.lat - p0.lat)); lon.push(p0.lon + a * (p1.lon - p0.lon));
+    alt.push(p0.alt != null && p1.alt != null ? p0.alt + a * (p1.alt - p0.alt) : null);
+  }
+  return { d, lat, lon, alt };
+}
+// Altitudes manquantes : modèle numérique d'Open-Meteo (Copernicus 90 m), 100 points par requête
+async function completerAltitudes(nd) {
+  const manque = nd.alt.map((a, k) => a == null ? k : -1).filter(k => k >= 0);
+  if (manque.length < 0.2 * nd.alt.length && manque.length < nd.alt.length) {     // quelques trous : interpolation
+    for (const k of manque) { let a = k - 1, b = k + 1; while (a >= 0 && nd.alt[a] == null) a--; while (b < nd.alt.length && nd.alt[b] == null) b++;
+      nd.alt[k] = a < 0 ? nd.alt[b] : b >= nd.alt.length ? nd.alt[a] : nd.alt[a] + (nd.alt[b] - nd.alt[a]) * (k - a) / (b - a); }
+    return false;
+  }
+  for (let i = 0; i < nd.lat.length; i += 100) {
+    const la = nd.lat.slice(i, i + 100).map(x => x.toFixed(5)).join(","), lo = nd.lon.slice(i, i + 100).map(x => x.toFixed(5)).join(",");
+    const r = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${la}&longitude=${lo}`).then(r => { if (!r.ok) throw new Error("altitude " + r.status); return r.json(); });
+    r.elevation.forEach((e, j) => { nd.alt[i + j] = e; });
+  }
+  return true;
+}
+// Tronçons : pente (altitude lissée), coût de pente, fatigue, cap, surcoût d'altitude
+function tronconsDe(nd) {
+  const n = nd.d.length, demi = LISSAGE_POINTS >> 1, ele = [];
+  for (let k = 0; k < n; k++) { let s = 0; for (let q = -demi; q <= demi; q++) s += nd.alt[Math.max(0, Math.min(n - 1, k + q))]; ele.push(s / LISSAGE_POINTS); }
+  const t = { dd: [], pente: [], c: [], g: [], cap: [], lat: [], lon: [], alt: [], s_alt: [], d_m: [], nlat: nd.lat, nlon: nd.lon };
+  let x = 0;
+  for (let j = 0; j + 1 < n; j++) {
+    const dd = nd.d[j + 1] - nd.d[j], i = dd > 0 ? (ele[j + 1] - ele[j]) / (dd * 1000) : 0, c = coutPente(i), a = (ele[j] + ele[j + 1]) / 2;
+    x += c * dd;
+    t.dd.push(dd); t.pente.push(i); t.c.push(c); t.g.push(Math.exp(A_FATIGUE * (1 - Math.exp(-x / LAMBDA_KM))));
+    t.cap.push(capDeg(nd.lat[j], nd.lon[j], nd.lat[j + 1], nd.lon[j + 1])); t.lat.push((nd.lat[j] + nd.lat[j + 1]) / 2); t.lon.push((nd.lon[j] + nd.lon[j + 1]) / 2);
+    t.alt.push(a); t.d_m.push((nd.d[j] + nd.d[j + 1]) / 2);
+    const perte = PERTE_ALTITUDE_M * Math.max(0, a - SEUIL_ALTITUDE_M); t.s_alt.push(1 / (1 - perte) - 1);
+  }
+  return t;
+}
+
+/* ---------- Technicité : OpenStreetMap en direct (terrainOSM.py + scoreParcours.py) ---------- */
+const NIVEAU_SAC = { hiking: 3, mountain_hiking: 5, demanding_mountain_hiking: 7, alpine_hiking: 8, demanding_alpine_hiking: 9, difficult_alpine_hiking: 10 };
+const NIVEAU_SURFACE = { asphalt: 0, concrete: 0, paved: 0, paving_stones: 0, metal_grid: 0, sett: 1, compacted: 1, fine_gravel: 1,
+  ground: 2, dirt: 2, earth: 2, grass: 2, unpaved: 2, gravel: 2, wood: 2, pebblestone: 4, mud: 4, sand: 4, stone: 6, rock: 8, scree: 9 };
+const NIVEAU_SMOOTHNESS = { excellent: 0, good: 0, intermediate: 1, bad: 4, very_bad: 7, horrible: 8, very_horrible: 9, impassable: 10 };
+const NIVEAU_DEFAUT = { path: 2, footway: 2, track: 1 }, SENTIERS = new Set(["path", "footway", "bridleway"]);
+const CLASSES_PENTE = [-0.20, -0.10, -0.03, 0.03, 0.10, 0.20, 0.40], TROU_COURT = 25, SAC_VOISINAGE_KM = 5, RAYON_OSM_M = 50;
+const classePente = i => { let k = 0; while (k < CLASSES_PENTE.length && i >= CLASSES_PENTE[k]) k++; return k; };
+function niveauTsat(tags) {
+  const v = [[tags.sac_scale, NIVEAU_SAC], [tags.surface, NIVEAU_SURFACE], [tags.smoothness, NIVEAU_SMOOTHNESS]].filter(([x, tb]) => x in tb).map(([x, tb]) => tb[x]);
+  return v.length ? Math.max(...v) : NIVEAU_DEFAUT[tags.highway] ?? 0;
+}
+const preponderant = v => { const n = {}; v.forEach(x => { n[x] = (n[x] || 0) + 1; }); const m = Math.max(...Object.values(n)); return Math.max(...Object.keys(n).filter(k => n[k] === m).map(Number)); };
+async function voiesOSM(t) {
+  const pas = Math.max(1, Math.ceil(t.lat.length / 600)), ligne = [];
+  for (let j = 0; j < t.lat.length; j += pas) ligne.push(t.lat[j].toFixed(5), t.lon[j].toFixed(5));
+  ligne.push(t.lat[t.lat.length - 1].toFixed(5), t.lon[t.lon.length - 1].toFixed(5));
+  const q = `[out:json][timeout:120];way[highway](around:${RAYON_OSM_M + 40 * pas},${ligne.join(",")});out tags geom;`;
+  let dernier = "";
+  for (const serveur of SERVEURS_OVERPASS) {      // serveur principal souvent saturé : miroirs publics ensuite
+    try {
+      const r = await fetch(serveur, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+      if (r.ok) return (await r.json()).elements.filter(w => w.geometry && w.geometry.length > 1);
+      dernier = r.status;
+    } catch (e) { dernier = String(e && e.message || e); }
+  }
+  return null;                                    // aucun serveur : technicité par défaut, signalée
+}
+const SERVEURS_OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+                           "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+// Niveau prépondérant de chaque tronçon (10 tranches de 10 m, voie la plus proche à moins de 50 m), puis règles de la base
+function technicite(t, voies) {
+  const kx = 111320 * Math.cos(t.lat[0] * Math.PI / 180), ky = 110540, CASE = 100, grille = new Map();
+  const segs = [];
+  voies.forEach((w, iw) => { for (let k = 0; k + 1 < w.geometry.length; k++) {
+    const a = w.geometry[k], b = w.geometry[k + 1], s = { ax: a.lon * kx, ay: a.lat * ky, bx: b.lon * kx, by: b.lat * ky, iw };
+    segs.push(s);
+    const x0 = Math.floor(Math.min(s.ax, s.bx) / CASE), x1 = Math.floor(Math.max(s.ax, s.bx) / CASE), y0 = Math.floor(Math.min(s.ay, s.by) / CASE), y1 = Math.floor(Math.max(s.ay, s.by) / CASE);
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) { const c = x + ":" + y; if (!grille.has(c)) grille.set(c, []); grille.get(c).push(s); }
+  } });
+  const voieProche = (la, lo) => {
+    const px = lo * kx, py = la * ky, cx = Math.floor(px / CASE), cy = Math.floor(py / CASE); let best = null, d2b = RAYON_OSM_M ** 2;
+    for (let x = cx - 1; x <= cx + 1; x++) for (let y = cy - 1; y <= cy + 1; y++) for (const s of grille.get(x + ":" + y) || []) {
+      const ux = s.bx - s.ax, uy = s.by - s.ay, l2 = ux * ux + uy * uy || 1, f = Math.max(0, Math.min(1, ((px - s.ax) * ux + (py - s.ay) * uy) / l2));
+      const dx = s.ax + f * ux - px, dy = s.ay + f * uy - py, d2 = dx * dx + dy * dy; if (d2 < d2b) { d2b = d2; best = s.iw; }
+    }
+    return best;
+  };
+  const n = t.dd.length, tech = new Array(n), tags = new Array(n), origine = new Array(n);
+  for (let j = 0; j < n; j++) {
+    const niv = [], tg = [];
+    for (let q = 0; q < 10; q++) { const f = (q + 0.5) / 10, iw = voieProche(t.nlat[j] + f * (t.nlat[j + 1] - t.nlat[j]), t.nlon[j] + f * (t.nlon[j + 1] - t.nlon[j])); if (iw != null) { niv.push(niveauTsat(voies[iw].tags)); tg.push(voies[iw].tags); } }
+    if (niv.length) { tech[j] = preponderant(niv); tags[j] = tg[niv.indexOf(tech[j])]; origine[j] = "osm"; } else { tech[j] = NaN; tags[j] = {}; origine[j] = ""; }
+  }
+  const classe = t.pente.map(classePente), connu = tech.map(x => !isNaN(x)), brut = tech.slice();
+  // Trous OSM : ≤ 2,5 km -> niveau précédent (suivant au départ) ; plus long -> prépondérant de la même classe de pente
+  for (let j = 0; j < n; ) {
+    if (connu[j]) { j++; continue; }
+    let k = j; while (k + 1 < n && !connu[k + 1]) k++;
+    if (k - j + 1 <= TROU_COURT && (j > 0 || k + 1 < n)) { const src = j > 0 ? j - 1 : k + 1; for (let q = j; q <= k; q++) { tech[q] = brut[src]; origine[q] = "locf"; } }
+    else for (let q = j; q <= k; q++) { const meme = brut.filter((x, z) => connu[z] && classe[z] === classe[q]), tous = brut.filter((x, z) => connu[z]);
+      tech[q] = (meme.length ? preponderant(meme) : tous.length ? preponderant(tous) : 2); origine[q] = "pente"; }
+    j = k + 1;
+  }
+  // Sentier sans sac_scale -> sac_scale prépondérant des sentiers tagués de même pente à ± 5 km, sinon de tout le tracé
+  const sentier = tags.map(tg => SENTIERS.has(tg.highway)), sac = tags.map(tg => NIVEAU_SAC[tg.sac_scale] ?? NaN);
+  for (let j = 0; j < n; j++) {
+    if (!sentier[j] || !isNaN(sac[j]) || origine[j] !== "osm") continue;
+    const proche = sac.map((s, z) => !isNaN(s) && sentier[z] && classe[z] === classe[j]), local = proche.map((p, z) => p && Math.abs(t.d_m[z] - t.d_m[j]) <= SAC_VOISINAGE_KM);
+    const src = local.some(Boolean) ? local : proche;
+    if (src.some(Boolean)) { const v = preponderant(sac.filter((s, z) => src[z])); if (v > tech[j]) { tech[j] = v; origine[j] = "voisin"; } }
+  }
+  return { tech, osm_absent: connu.map(c => c ? 0 : 1), part_osm: connu.filter(Boolean).length / n };
+}
+
+/* ---------- Météo : ERA5 par Open-Meteo, un point tous les ~5 km ---------- */
+const BLOC_KM = 5, ANNEES_CLIMATO = 5, R_AIR_J = 287.05;
+// WBGT à l'ombre, approximation du Bureau of Meteorology australien : 0,567 T + 0,393 e + 3,94 (e en hPa)
+const wbgtOmbre = (T, hr) => 0.567 * T + 0.393 * (hr / 100 * 6.105 * Math.exp(17.27 * T / (237.7 + T))) + 3.94;
+const jourISO = ms => new Date(ms).toISOString().slice(0, 10);
+async function meteoBlocs(t, departMs, dureeH) {
+  const n = t.dd.length, bloc = t.d_m.map(d => Math.floor(d / BLOC_KM)), nb = Math.max(...bloc) + 1, ptsBloc = [];
+  for (let b = 0; b < nb; b++) { const j = bloc.indexOf(b) >= 0 ? Math.round((bloc.indexOf(b) + bloc.lastIndexOf(b)) / 2) : 0; ptsBloc.push(j); }
+  // Date passée (archive ERA5 disponible, ~5 jours de retard) : son année ; sinon les 5 dernières années disponibles
+  const recent = Date.now() - 6 * 86400000, finFenetre = (dureeH + 48) * 3600000, recule = r => { const d = new Date(departMs); d.setUTCFullYear(d.getUTCFullYear() - r); return d; };
+  const annees = departMs + finFenetre < recent ? [0] : [];
+  for (let r = 1; !annees.length || (annees[0] !== 0 && annees.length < ANNEES_CLIMATO && r < 40); r++) if (recule(r).getTime() + finFenetre < recent) annees.push(r);
+  const series = [];
+  for (const recul of annees) {
+    const d0 = recule(recul);
+    const debut = Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate()), fin = debut + (Math.ceil(dureeH / 24) + 2) * 86400000;
+    const la = ptsBloc.map(j => t.lat[j].toFixed(4)).join(","), lo = ptsBloc.map(j => t.lon[j].toFixed(4)).join(","), al = ptsBloc.map(j => Math.round(t.alt[j])).join(",");
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${la}&longitude=${lo}&elevation=${al}&start_date=${jourISO(debut)}&end_date=${jourISO(fin)}` +
+      `&hourly=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,precipitation,snowfall,snow_depth&wind_speed_unit=ms&timezone=GMT`;
+    const r = await fetch(url).then(r => { if (!r.ok) throw new Error("météo Open-Meteo " + r.status); return r.json(); });
+    const lieux = Array.isArray(r) ? r : [r];
+    series.push({ decalageMs: departMs - d0.getTime(), lieux: lieux.map(x => x.hourly), t0: Date.parse(lieux[0].hourly.time[0] + "Z") });
+  }
+  // Conditions d'un tronçon à t heures du départ : médiane sur les années (une seule si la date est passée)
+  const med = v => { const a = v.slice().sort((x, y) => x - y), m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+  return (j, th) => {
+    const b = bloc[j], val = series.map(s => {
+      const h = s.lieux[b], k = Math.max(0, Math.min(h.time.length - 1, Math.round((departMs - s.decalageMs + th * 3600000 - s.t0) / 3600000)));
+      const T = h.temperature_2m[k] ?? 10, hr = h.relative_humidity_2m[k] ?? 70, P = h.surface_pressure[k] ?? 900, v = h.wind_speed_10m[k] ?? 0, dir = h.wind_direction_10m[k] ?? 0;
+      return { wbgt: wbgtOmbre(T, hr), face: v * Math.cos((dir - t.cap[j]) * Math.PI / 180), densite: P * 100 / (R_AIR_J * (T + 273.15)),
+               neige: 100 * (h.snow_depth[k] ?? 0), pluie: Math.max(0, (h.precipitation[k] ?? 0) - (h.snowfall[k] ?? 0) / 0.7) };
+    });
+    return Object.fromEntries(["wbgt", "face", "densite", "neige", "pluie"].map(c => [c, med(val.map(x => x[c]))]));
+  };
+}
+
+/* ---------- Score d'un tracé libre pour un temps donné (score_parcours) ---------- */
+// meteo(j, th) -> conditions ; null : conditions neutres (backyard) ; dnfPct, autonomie : saisis par le coureur
+function scoreTraceLibre(t, terrain, meteo, departMs, T, dnfPct = 0, autonomie = false) {
+  const n = t.dd.length, l = t.dd.map(d => d * 1000), total = t.dd.reduce((a, b) => a + b, 0);
+  const tMil = new Array(n), nuit = new Array(n), perte = new Array(n), eta = new Array(n), cond = new Array(n);
+  const neutre = { wbgt: 12, face: 0, densite: 1.15, neige: 0, pluie: 0 };
+  let cum = 0; for (let j = 0; j < n; j++) { cum += t.dd[j]; tMil[j] = cum / total * T; }
+  let v0, v, dt;
+  for (let it = 0; it < 4; it++) {
+    for (let j = 0; j < n; j++) {
+      const c = cond[j] = meteo ? meteo(j, tMil[j]) : neutre, tech = terrain.tech[j], enneige = c.neige >= SEUIL_NEIGE_CM;
+      nuit[j] = hauteurSoleil(departMs + tMil[j] * 3600000, t.lat[j], t.lon[j]) < -0.833;
+      const tasse = enneige && (terrain.osm_absent[j] === 1 || c.neige > NEIGE_PROFONDE_CM || tech <= T_FACILE);
+      let te = tech; if (te >= T_GLISSANT && c.pluie >= PLUIE_MMH) te += 1;
+      eta[j] = enneige ? ETA_NEIGE : 1; perte[j] = PERTE_TECH * (tasse ? 0 : te);
+    }
+    const inv = t.c.map((c, j) => 1 / (c * t.g[j] * (nuit[j] ? BONUS_NUIT : 1)));
+    const vt = (K, j) => Math.max(K * inv[j] - perte[j], K * inv[j] / M_TECH_MAX);
+    const ecart = K => { let s = 0; for (let j = 0; j < n; j++) s += l[j] * eta[j] / vt(K, j); return s / 3600 - T; };
+    let lo = 1e-6, hi = 100; for (let k = 0; k < 80; k++) { const mid = (lo + hi) / 2; if (ecart(mid) > 0) lo = mid; else hi = mid; }
+    const K = (lo + hi) / 2;
+    v0 = inv.map(x => K * x); v = v0.map((x, j) => vt(K, j) / eta[j]); dt = v.map((x, j) => l[j] / x / 3600);
+    cum = 0; for (let j = 0; j < n; j++) { tMil[j] = cum + dt[j] / 2; cum += dt[j]; }
+  }
+  const tm = { duree: 0, charge: 0, tech: 0, th: 0, vent: 0, alt: 0, nuit_h: 0 }; let brut = 0; const couts = new Array(n);
+  for (let j = 0; j < n; j++) {
+    const c = cond[j], sTh = surcoutThermique(c.wbgt), sV = surcoutVent(v[j], t.pente[j], c.face, c.densite), sAlt = t.s_alt[j];
+    const duree = RYTHME_NORMAL * dt[j] * (nuit[j] ? BONUS_NUIT : 1), charge = t.c[j] * t.dd[j] * t.g[j], tech = charge * (v0[j] / v[j] - 1);
+    const a = duree + charge + tech, cout = a * (1 + sTh) * (1 + sV) * (1 + sAlt);
+    tm.duree += duree; tm.charge += charge; tm.tech += tech; tm.th += a * sTh; tm.vent += a * (1 + sTh) * sV; tm.alt += a * (1 + sTh) * (1 + sV) * sAlt;
+    if (nuit[j]) tm.nuit_h += dt[j]; brut += cout; couts[j] = cout;
+  }
+  const fDnf = (1 / (1 - Math.min(dnfPct, 95) / 100)) ** D.beta_dnf, avec = brut * fDnf * (autonomie ? 1.2 : 1);
+  return { brut, fDnf, index: D.compression.A * Math.log1p(avec / D.compression.S0), couts, nuit_pct: 100 * tm.nuit_h / T,
+           termes: { "Durée": tm.duree, "Effort mécanique": tm.charge, "Technicité": tm.tech, "Météo": tm.th + tm.vent, "Altitude": tm.alt } };
+}
+
+/* ---------- Préparation complète d'un tracé (GPX ou activité), étapes signalées par etape(texte) ---------- */
+async function preparerTraceLibre(points, departMs, dureeH, etape) {
+  etape("trace");
+  const nd = noeudsTous100m(points);
+  if (nd.d[nd.d.length - 1] < 1) throw new Error("tracé trop court");
+  if (nd.alt.some(a => a == null)) { etape("altitude"); await completerAltitudes(nd); }
+  const t = tronconsDe(nd);
+  etape("osm"); const voies = await voiesOSM(t);
+  const terrain = voies ? technicite(t, voies) : { tech: t.dd.map(() => 2), osm_absent: t.dd.map(() => 1), part_osm: 0, indisponible: true };
+  etape("meteo"); const meteo = await meteoBlocs(t, departMs, dureeH);
+  return { t, terrain, meteo, distance_km: nd.d[nd.d.length - 1], dplus_m: t.pente.reduce((a, i, j) => a + Math.max(0, i * t.dd[j] * 1000), 0) };
+}
+
+/* ---------- Backyard synthétique : boucle de 6,706 km (4 167 miles / 100), une boucle par heure en mouvement ---------- */
+const BOUCLE_KM = 6.706;
+function backyardTroncons(nBoucles, dplusBoucle, lat, lon) {
+  const parBoucle = Math.round(BOUCLE_KM / PAS_TRONCON_KM), pts = [], h = dplusBoucle;   // montée puis descente (profil en cloche)
+  for (let b = 0; b < nBoucles; b++) for (let q = 0; q < parBoucle; q++) {
+    const f = q / parBoucle; pts.push({ lat: lat + 0.0005 * Math.sin(2 * Math.PI * f), lon: lon + 0.0005 * Math.cos(2 * Math.PI * f), alt: 200 + h * (1 - Math.cos(2 * Math.PI * f)) / 2 });
+  }
+  pts.push({ ...pts[0] });
+  const nd = { d: [], lat: [], lon: [], alt: [] };
+  pts.forEach((p, k) => { nd.d.push(k * PAS_TRONCON_KM); nd.lat.push(p.lat); nd.lon.push(p.lon); nd.alt.push(p.alt); });
+  return tronconsDe(nd);
 }
 
 const esc = x => String(x ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));   // textes venus d'utmb.world
